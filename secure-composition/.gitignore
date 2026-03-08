@@ -1,0 +1,8 @@
+# Temper stuff
+temper.out
+
+# Emacs droppings
+*~
+
+# Python droppings
+__pycache__

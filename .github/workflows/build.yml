@@ -1,0 +1,57 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache Temper toolchain
+        id: cache-temper
+        uses: actions/cache@v4
+        with:
+          path: ~/temper-toolchain
+          key: temper-v0.6.0-linux-x64
+
+      - name: Download Temper v0.6.0
+        if: steps.cache-temper.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/temper-toolchain
+          curl -fSL https://github.com/temperlang/temper/releases/download/v0.6.0/temper-v0.6.0-linux-x64.tgz \
+            -o /tmp/temper.tgz
+          tar -xzf /tmp/temper.tgz -C ~/temper-toolchain
+
+      - name: Add Temper to PATH
+        run: |
+          TEMPER_DIR=$(find ~/temper-toolchain -name "temper" -type f | head -1 | xargs dirname)
+          echo "Temper found at: $TEMPER_DIR"
+          ls -la "$TEMPER_DIR"
+          echo "$TEMPER_DIR" >> $GITHUB_PATH
+
+      - name: Verify Temper
+        run: |
+          which temper
+          temper --version || true
+
+      - name: Build secure-composition
+        working-directory: secure-composition
+        run: temper build -b js
+
+      - name: Build ORM
+        run: temper build -b js
+
+      - name: Run tests
+        run: temper test -b js
