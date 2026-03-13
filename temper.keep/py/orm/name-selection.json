@@ -10,15 +10,15 @@
         },
         {
             "qualified-name": "orm/src.type ChangesetError.field",
-            "selected-name": "field_300"
+            "selected-name": "field_309"
         },
         {
             "qualified-name": "orm/src.type ChangesetError.message",
-            "selected-name": "message_301"
+            "selected-name": "message_310"
         },
         {
             "qualified-name": "orm/src.type ChangesetError.constructor()",
-            "selected-name": "constructor_302"
+            "selected-name": "constructor_311"
         },
         {
             "qualified-name": "orm/src.type Changeset",
@@ -26,7 +26,7 @@
         },
         {
             "qualified-name": "orm/src.type Changeset.tableDef",
-            "selected-name": "table_def_152"
+            "selected-name": "table_def_161"
         },
         {
             "qualified-name": "orm/src.type TableDef",
@@ -34,43 +34,43 @@
         },
         {
             "qualified-name": "orm/src.type Changeset.get tableDef()",
-            "selected-name": "get_dottable_def_305"
+            "selected-name": "get_dottable_def_314"
         },
         {
             "qualified-name": "orm/src.type Changeset.changes",
-            "selected-name": "changes_153"
+            "selected-name": "changes_162"
         },
         {
             "qualified-name": "orm/src.type Changeset.get changes()",
-            "selected-name": "get_dotchanges_307"
+            "selected-name": "get_dotchanges_316"
         },
         {
             "qualified-name": "orm/src.type Changeset.errors",
-            "selected-name": "errors_154"
+            "selected-name": "errors_163"
         },
         {
             "qualified-name": "orm/src.type Changeset.get errors()",
-            "selected-name": "get_doterrors_309"
+            "selected-name": "get_doterrors_318"
         },
         {
             "qualified-name": "orm/src.type Changeset.isValid",
-            "selected-name": "is_valid_155"
+            "selected-name": "is_valid_164"
         },
         {
             "qualified-name": "orm/src.type Changeset.get isValid()",
-            "selected-name": "get_dotis_valid_311"
+            "selected-name": "get_dotis_valid_320"
         },
         {
             "qualified-name": "orm/src.type Changeset.cast()",
-            "selected-name": "cast_313"
+            "selected-name": "cast_322"
         },
         {
             "qualified-name": "orm/src.type Changeset.validateRequired()",
-            "selected-name": "validate_required_316"
+            "selected-name": "validate_required_325"
         },
         {
             "qualified-name": "orm/src.type Changeset.validateLength()",
-            "selected-name": "validate_length_319"
+            "selected-name": "validate_length_328"
         },
         {
             "qualified-name": "orm/src.type SafeIdentifier",
@@ -78,23 +78,23 @@
         },
         {
             "qualified-name": "orm/src.type Changeset.validateInt()",
-            "selected-name": "validate_int_324"
+            "selected-name": "validate_int_333"
         },
         {
             "qualified-name": "orm/src.type Changeset.validateInt64()",
-            "selected-name": "validate_int64_327"
+            "selected-name": "validate_int64_336"
         },
         {
             "qualified-name": "orm/src.type Changeset.validateFloat()",
-            "selected-name": "validate_float_330"
+            "selected-name": "validate_float_339"
         },
         {
             "qualified-name": "orm/src.type Changeset.validateBool()",
-            "selected-name": "validate_bool_333"
+            "selected-name": "validate_bool_342"
         },
         {
             "qualified-name": "orm/src.type Changeset.toInsertSql()",
-            "selected-name": "to_insert_sql_336"
+            "selected-name": "to_insert_sql_345"
         },
         {
             "qualified-name": "orm/src.type SqlFragment",
@@ -102,203 +102,203 @@
         },
         {
             "qualified-name": "orm/src.type Changeset.toUpdateSql()",
-            "selected-name": "to_update_sql_338"
+            "selected-name": "to_update_sql_347"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl",
-            "selected-name": "ChangesetImpl_91"
+            "selected-name": "ChangesetImpl_100"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl._tableDef",
-            "selected-name": "table_def_341"
+            "selected-name": "table_def_350"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl._params",
-            "selected-name": "params_342"
+            "selected-name": "params_351"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl._changes",
-            "selected-name": "changes_343"
+            "selected-name": "changes_352"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl._errors",
-            "selected-name": "errors_344"
+            "selected-name": "errors_353"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl._isValid",
-            "selected-name": "is_valid_345"
+            "selected-name": "is_valid_354"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.tableDef",
-            "selected-name": "table_def_169"
+            "selected-name": "table_def_178"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.get tableDef()",
-            "selected-name": "get_dottable_def_346"
+            "selected-name": "get_dottable_def_355"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.changes",
-            "selected-name": "changes_170"
+            "selected-name": "changes_179"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.get changes()",
-            "selected-name": "get_dotchanges_348"
+            "selected-name": "get_dotchanges_357"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.errors",
-            "selected-name": "errors_171"
+            "selected-name": "errors_180"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.get errors()",
-            "selected-name": "get_doterrors_350"
+            "selected-name": "get_doterrors_359"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.isValid",
-            "selected-name": "is_valid_172"
+            "selected-name": "is_valid_181"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.get isValid()",
-            "selected-name": "get_dotis_valid_352"
+            "selected-name": "get_dotis_valid_361"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.cast()",
-            "selected-name": "cast_354"
+            "selected-name": "cast_363"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.cast().mb=",
-            "selected-name": "mb_357"
+            "selected-name": "mb_366"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.cast().val=",
-            "selected-name": "val_359"
+            "selected-name": "val_368"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateRequired()",
-            "selected-name": "validate_required_360"
+            "selected-name": "validate_required_369"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateRequired().return=",
-            "selected-name": "return_183"
+            "selected-name": "return_192"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateRequired().eb=",
-            "selected-name": "eb_363"
+            "selected-name": "eb_372"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateRequired().valid=",
-            "selected-name": "valid_364"
+            "selected-name": "valid_373"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateLength()",
-            "selected-name": "validate_length_366"
+            "selected-name": "validate_length_375"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateLength().return=",
-            "selected-name": "return_184"
+            "selected-name": "return_193"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateLength().val=",
-            "selected-name": "val_371"
+            "selected-name": "val_380"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateLength().len=",
-            "selected-name": "len_372"
+            "selected-name": "len_381"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateLength().msg=",
-            "selected-name": "msg_373"
+            "selected-name": "msg_382"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateLength().eb=",
-            "selected-name": "eb_374"
+            "selected-name": "eb_383"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt()",
-            "selected-name": "validate_int_375"
+            "selected-name": "validate_int_384"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt().return=",
-            "selected-name": "return_185"
+            "selected-name": "return_194"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt().val=",
-            "selected-name": "val_378"
+            "selected-name": "val_387"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt().parseOk=",
-            "selected-name": "parse_ok_379"
+            "selected-name": "parse_ok_388"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt().eb=",
-            "selected-name": "eb_380"
+            "selected-name": "eb_389"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt64()",
-            "selected-name": "validate_int64_381"
+            "selected-name": "validate_int64_390"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt64().return=",
-            "selected-name": "return_186"
+            "selected-name": "return_195"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt64().val=",
-            "selected-name": "val_384"
+            "selected-name": "val_393"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt64().parseOk=",
-            "selected-name": "parse_ok_385"
+            "selected-name": "parse_ok_394"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateInt64().eb=",
-            "selected-name": "eb_386"
+            "selected-name": "eb_395"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateFloat()",
-            "selected-name": "validate_float_387"
+            "selected-name": "validate_float_396"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateFloat().return=",
-            "selected-name": "return_187"
+            "selected-name": "return_196"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateFloat().val=",
-            "selected-name": "val_390"
+            "selected-name": "val_399"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateFloat().parseOk=",
-            "selected-name": "parse_ok_391"
+            "selected-name": "parse_ok_400"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateFloat().eb=",
-            "selected-name": "eb_392"
+            "selected-name": "eb_401"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateBool()",
-            "selected-name": "validate_bool_393"
+            "selected-name": "validate_bool_402"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateBool().return=",
-            "selected-name": "return_188"
+            "selected-name": "return_197"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateBool().val=",
-            "selected-name": "val_396"
+            "selected-name": "val_405"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateBool().isTrue=",
-            "selected-name": "is_true_397"
+            "selected-name": "is_true_406"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateBool().isFalse=",
-            "selected-name": "is_false_398"
+            "selected-name": "is_false_407"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.validateBool().eb=",
-            "selected-name": "eb_399"
+            "selected-name": "eb_408"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.parseBoolSqlPart()",
-            "selected-name": "parse_bool_sql_part_400"
+            "selected-name": "parse_bool_sql_part_409"
         },
         {
             "qualified-name": "orm/src.type SqlBoolean",
@@ -306,11 +306,11 @@
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.parseBoolSqlPart().return=",
-            "selected-name": "return_189"
+            "selected-name": "return_198"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.valueToSqlPart()",
-            "selected-name": "value_to_sql_part_403"
+            "selected-name": "value_to_sql_part_412"
         },
         {
             "qualified-name": "orm/src.type FieldDef",
@@ -322,11 +322,11 @@
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.valueToSqlPart().return=",
-            "selected-name": "return_190"
+            "selected-name": "return_199"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.valueToSqlPart().ft=",
-            "selected-name": "ft_407"
+            "selected-name": "ft_416"
         },
         {
             "qualified-name": "orm/src.type FieldType",
@@ -378,43 +378,43 @@
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql()",
-            "selected-name": "to_insert_sql_408"
+            "selected-name": "to_insert_sql_417"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().i=#0",
-            "selected-name": "i_410"
+            "selected-name": "i_419"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().f=",
-            "selected-name": "f_411"
+            "selected-name": "f_420"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().pairs=",
-            "selected-name": "pairs_412"
+            "selected-name": "pairs_421"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().colNames=",
-            "selected-name": "col_names_413"
+            "selected-name": "col_names_422"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().valParts=",
-            "selected-name": "val_parts_414"
+            "selected-name": "val_parts_423"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().i=#1",
-            "selected-name": "i_415"
+            "selected-name": "i_424"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().pair=",
-            "selected-name": "pair_416"
+            "selected-name": "pair_425"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().fd=",
-            "selected-name": "fd_417"
+            "selected-name": "fd_426"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().b=",
-            "selected-name": "b_418"
+            "selected-name": "b_427"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder",
@@ -422,35 +422,35 @@
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toInsertSql().j=",
-            "selected-name": "j_420"
+            "selected-name": "j_429"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toUpdateSql()",
-            "selected-name": "to_update_sql_421"
+            "selected-name": "to_update_sql_430"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toUpdateSql().pairs=",
-            "selected-name": "pairs_424"
+            "selected-name": "pairs_433"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toUpdateSql().b=",
-            "selected-name": "b_425"
+            "selected-name": "b_434"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toUpdateSql().i=",
-            "selected-name": "i_426"
+            "selected-name": "i_435"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toUpdateSql().pair=",
-            "selected-name": "pair_427"
+            "selected-name": "pair_436"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.toUpdateSql().fd=",
-            "selected-name": "fd_428"
+            "selected-name": "fd_437"
         },
         {
             "qualified-name": "orm/src.type ChangesetImpl.constructor()",
-            "selected-name": "constructor_429"
+            "selected-name": "constructor_438"
         },
         {
             "qualified-name": "orm/src.type OrderClause",
@@ -458,15 +458,15 @@
         },
         {
             "qualified-name": "orm/src.type OrderClause.field",
-            "selected-name": "field_529"
+            "selected-name": "field_538"
         },
         {
             "qualified-name": "orm/src.type OrderClause.ascending",
-            "selected-name": "ascending_530"
+            "selected-name": "ascending_539"
         },
         {
             "qualified-name": "orm/src.type OrderClause.constructor()",
-            "selected-name": "constructor_531"
+            "selected-name": "constructor_540"
         },
         {
             "qualified-name": "orm/src.type Query",
@@ -474,203 +474,203 @@
         },
         {
             "qualified-name": "orm/src.type Query.tableName",
-            "selected-name": "table_name_534"
+            "selected-name": "table_name_543"
         },
         {
             "qualified-name": "orm/src.type Query.conditions",
-            "selected-name": "conditions_535"
+            "selected-name": "conditions_544"
         },
         {
             "qualified-name": "orm/src.type Query.selectedFields",
-            "selected-name": "selected_fields_536"
+            "selected-name": "selected_fields_545"
         },
         {
             "qualified-name": "orm/src.type Query.orderClauses",
-            "selected-name": "order_clauses_537"
+            "selected-name": "order_clauses_546"
         },
         {
             "qualified-name": "orm/src.type Query.limitVal",
-            "selected-name": "limit_val_538"
+            "selected-name": "limit_val_547"
         },
         {
             "qualified-name": "orm/src.type Query.offsetVal",
-            "selected-name": "offset_val_539"
+            "selected-name": "offset_val_548"
         },
         {
             "qualified-name": "orm/src.type Query.where()",
-            "selected-name": "where_540"
+            "selected-name": "where_549"
         },
         {
             "qualified-name": "orm/src.type Query.where().nb=",
-            "selected-name": "nb_543"
+            "selected-name": "nb_552"
         },
         {
             "qualified-name": "orm/src.type Query.select()",
-            "selected-name": "select_544"
+            "selected-name": "select_553"
         },
         {
             "qualified-name": "orm/src.type Query.orderBy()",
-            "selected-name": "order_by_547"
+            "selected-name": "order_by_556"
         },
         {
             "qualified-name": "orm/src.type Query.orderBy().nb=",
-            "selected-name": "nb_551"
+            "selected-name": "nb_560"
         },
         {
             "qualified-name": "orm/src.type Query.limit()",
-            "selected-name": "limit_552"
+            "selected-name": "limit_561"
         },
         {
             "qualified-name": "orm/src.type Query.offset()",
-            "selected-name": "offset_555"
+            "selected-name": "offset_564"
         },
         {
             "qualified-name": "orm/src.type Query.toSql()",
-            "selected-name": "to_sql_558"
+            "selected-name": "to_sql_567"
         },
         {
             "qualified-name": "orm/src.type Query.toSql().b=",
-            "selected-name": "b_560"
+            "selected-name": "b_569"
         },
         {
             "qualified-name": "orm/src.type Query.toSql().i=",
-            "selected-name": "i_562"
+            "selected-name": "i_571"
         },
         {
             "qualified-name": "orm/src.type Query.toSql().first=",
-            "selected-name": "first_563"
+            "selected-name": "first_572"
         },
         {
             "qualified-name": "orm/src.type Query.toSql().lv=",
-            "selected-name": "lv_565"
+            "selected-name": "lv_574"
         },
         {
             "qualified-name": "orm/src.type Query.toSql().ov=",
-            "selected-name": "ov_566"
+            "selected-name": "ov_575"
         },
         {
             "qualified-name": "orm/src.type Query.safeToSql()",
-            "selected-name": "safe_to_sql_567"
+            "selected-name": "safe_to_sql_576"
         },
         {
             "qualified-name": "orm/src.type Query.safeToSql().return=",
-            "selected-name": "return_212"
+            "selected-name": "return_221"
         },
         {
             "qualified-name": "orm/src.type Query.constructor()",
-            "selected-name": "constructor_570"
+            "selected-name": "constructor_579"
         },
         {
             "qualified-name": "orm/src.type SafeIdentifier.sqlValue",
-            "selected-name": "sql_value_215"
+            "selected-name": "sql_value_224"
         },
         {
             "qualified-name": "orm/src.type SafeIdentifier.get sqlValue()",
-            "selected-name": "get_dotsql_value_619"
+            "selected-name": "get_dotsql_value_628"
         },
         {
             "qualified-name": "orm/src.type ValidatedIdentifier",
-            "selected-name": "ValidatedIdentifier_115"
+            "selected-name": "ValidatedIdentifier_124"
         },
         {
             "qualified-name": "orm/src.type ValidatedIdentifier._value",
-            "selected-name": "value_621"
+            "selected-name": "value_630"
         },
         {
             "qualified-name": "orm/src.type ValidatedIdentifier.sqlValue",
-            "selected-name": "sql_value_217"
+            "selected-name": "sql_value_226"
         },
         {
             "qualified-name": "orm/src.type ValidatedIdentifier.get sqlValue()",
-            "selected-name": "get_dotsql_value_622"
+            "selected-name": "get_dotsql_value_631"
         },
         {
             "qualified-name": "orm/src.type ValidatedIdentifier.constructor()",
-            "selected-name": "constructor_624"
-        },
-        {
-            "qualified-name": "orm/src.type StringField.constructor()",
             "selected-name": "constructor_633"
         },
         {
-            "qualified-name": "orm/src.type IntField.constructor()",
-            "selected-name": "constructor_634"
-        },
-        {
-            "qualified-name": "orm/src.type Int64Field.constructor()",
-            "selected-name": "constructor_635"
-        },
-        {
-            "qualified-name": "orm/src.type FloatField.constructor()",
-            "selected-name": "constructor_636"
-        },
-        {
-            "qualified-name": "orm/src.type BoolField.constructor()",
-            "selected-name": "constructor_637"
-        },
-        {
-            "qualified-name": "orm/src.type DateField.constructor()",
-            "selected-name": "constructor_638"
-        },
-        {
-            "qualified-name": "orm/src.type FieldDef.name",
-            "selected-name": "name_639"
-        },
-        {
-            "qualified-name": "orm/src.type FieldDef.fieldType",
-            "selected-name": "field_type_640"
-        },
-        {
-            "qualified-name": "orm/src.type FieldDef.nullable",
-            "selected-name": "nullable_641"
-        },
-        {
-            "qualified-name": "orm/src.type FieldDef.constructor()",
+            "qualified-name": "orm/src.type StringField.constructor()",
             "selected-name": "constructor_642"
         },
         {
+            "qualified-name": "orm/src.type IntField.constructor()",
+            "selected-name": "constructor_643"
+        },
+        {
+            "qualified-name": "orm/src.type Int64Field.constructor()",
+            "selected-name": "constructor_644"
+        },
+        {
+            "qualified-name": "orm/src.type FloatField.constructor()",
+            "selected-name": "constructor_645"
+        },
+        {
+            "qualified-name": "orm/src.type BoolField.constructor()",
+            "selected-name": "constructor_646"
+        },
+        {
+            "qualified-name": "orm/src.type DateField.constructor()",
+            "selected-name": "constructor_647"
+        },
+        {
+            "qualified-name": "orm/src.type FieldDef.name",
+            "selected-name": "name_648"
+        },
+        {
+            "qualified-name": "orm/src.type FieldDef.fieldType",
+            "selected-name": "field_type_649"
+        },
+        {
+            "qualified-name": "orm/src.type FieldDef.nullable",
+            "selected-name": "nullable_650"
+        },
+        {
+            "qualified-name": "orm/src.type FieldDef.constructor()",
+            "selected-name": "constructor_651"
+        },
+        {
             "qualified-name": "orm/src.type TableDef.tableName",
-            "selected-name": "table_name_646"
+            "selected-name": "table_name_655"
         },
         {
             "qualified-name": "orm/src.type TableDef.fields",
-            "selected-name": "fields_647"
+            "selected-name": "fields_656"
         },
         {
             "qualified-name": "orm/src.type TableDef.field()",
-            "selected-name": "field_648"
+            "selected-name": "field_657"
         },
         {
             "qualified-name": "orm/src.type TableDef.field().return=",
-            "selected-name": "return_241"
+            "selected-name": "return_250"
         },
         {
             "qualified-name": "implicits.type List.forEach().n=",
-            "selected-name": "n_2985"
+            "selected-name": "n_3157"
         },
         {
             "qualified-name": "implicits.type List.forEach().i=",
-            "selected-name": "i_2986"
+            "selected-name": "i_3158"
         },
         {
             "qualified-name": "implicits.type List.forEach().el=",
-            "selected-name": "el_2987"
+            "selected-name": "el_3159"
         },
         {
             "qualified-name": "orm/src.type TableDef.field().(f)",
-            "selected-name": "f_651"
+            "selected-name": "f_660"
         },
         {
             "qualified-name": "orm/src.type TableDef.constructor()",
-            "selected-name": "constructor_652"
+            "selected-name": "constructor_661"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.buffer",
-            "selected-name": "buffer_674"
+            "selected-name": "buffer_683"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendSafe()",
-            "selected-name": "append_safe_675"
+            "selected-name": "append_safe_684"
         },
         {
             "qualified-name": "orm/src.type SqlSource",
@@ -678,195 +678,199 @@
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendFragment()",
-            "selected-name": "append_fragment_678"
+            "selected-name": "append_fragment_687"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendPart()",
-            "selected-name": "append_part_681"
+            "selected-name": "append_part_690"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendPartList()",
-            "selected-name": "append_part_list_684"
+            "selected-name": "append_part_list_693"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendBoolean()",
-            "selected-name": "append_boolean_688"
+            "selected-name": "append_boolean_697"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendBooleanList()",
-            "selected-name": "append_boolean_list_691"
+            "selected-name": "append_boolean_list_700"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendDate()",
-            "selected-name": "append_date_695"
+            "selected-name": "append_date_704"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendDateList()",
-            "selected-name": "append_date_list_698"
+            "selected-name": "append_date_list_707"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendFloat64()",
-            "selected-name": "append_float64_702"
+            "selected-name": "append_float64_711"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendFloat64List()",
-            "selected-name": "append_float64_list_705"
+            "selected-name": "append_float64_list_714"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendInt32()",
-            "selected-name": "append_int32_709"
+            "selected-name": "append_int32_718"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendInt32List()",
-            "selected-name": "append_int32_list_712"
+            "selected-name": "append_int32_list_721"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendInt64()",
-            "selected-name": "append_int64_716"
+            "selected-name": "append_int64_725"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendInt64List()",
-            "selected-name": "append_int64_list_719"
+            "selected-name": "append_int64_list_728"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendString()",
-            "selected-name": "append_string_723"
+            "selected-name": "append_string_732"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendStringList()",
-            "selected-name": "append_string_list_726"
+            "selected-name": "append_string_list_735"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendList()",
-            "selected-name": "append_list_730"
+            "selected-name": "append_list_739"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.appendList().i=",
-            "selected-name": "i_734"
+            "selected-name": "i_743"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.accumulated",
-            "selected-name": "accumulated_242"
+            "selected-name": "accumulated_251"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.get accumulated()",
-            "selected-name": "get_dotaccumulated_735"
+            "selected-name": "get_dotaccumulated_744"
         },
         {
             "qualified-name": "orm/src.type SqlBuilder.constructor()",
-            "selected-name": "constructor_737"
+            "selected-name": "constructor_746"
         },
         {
             "qualified-name": "orm/src.type SqlFragment.parts",
-            "selected-name": "parts_741"
+            "selected-name": "parts_750"
         },
         {
             "qualified-name": "orm/src.type SqlFragment.toSource()",
-            "selected-name": "to_source_742"
+            "selected-name": "to_source_751"
         },
         {
             "qualified-name": "orm/src.type SqlFragment.toString()",
-            "selected-name": "to_string_744"
+            "selected-name": "to_string_753"
         },
         {
             "qualified-name": "orm/src.type SqlFragment.toString().builder=",
-            "selected-name": "builder_746"
+            "selected-name": "builder_755"
         },
         {
             "qualified-name": "orm/src.type SqlFragment.toString().i=",
-            "selected-name": "i_747"
+            "selected-name": "i_756"
         },
         {
             "qualified-name": "orm/src.type SqlFragment.constructor()",
-            "selected-name": "constructor_748"
-        },
-        {
-            "qualified-name": "orm/src.type SqlPart.formatTo()",
-            "selected-name": "format_to_750"
-        },
-        {
-            "qualified-name": "orm/src.type SqlSource.source",
-            "selected-name": "source_753"
-        },
-        {
-            "qualified-name": "orm/src.type SqlSource.formatTo()",
-            "selected-name": "format_to_754"
-        },
-        {
-            "qualified-name": "orm/src.type SqlSource.constructor()",
             "selected-name": "constructor_757"
         },
         {
+            "qualified-name": "orm/src.type SqlPart.formatTo()",
+            "selected-name": "format_to_759"
+        },
+        {
+            "qualified-name": "orm/src.type SqlSource.source",
+            "selected-name": "source_762"
+        },
+        {
+            "qualified-name": "orm/src.type SqlSource.formatTo()",
+            "selected-name": "format_to_763"
+        },
+        {
+            "qualified-name": "orm/src.type SqlSource.constructor()",
+            "selected-name": "constructor_766"
+        },
+        {
             "qualified-name": "orm/src.type SqlBoolean.value",
-            "selected-name": "value_759"
+            "selected-name": "value_768"
         },
         {
             "qualified-name": "orm/src.type SqlBoolean.formatTo()",
-            "selected-name": "format_to_760"
+            "selected-name": "format_to_769"
         },
         {
             "qualified-name": "orm/src.type SqlBoolean.constructor()",
-            "selected-name": "constructor_763"
+            "selected-name": "constructor_772"
         },
         {
             "qualified-name": "orm/src.type SqlDate.value",
-            "selected-name": "value_765"
+            "selected-name": "value_774"
         },
         {
             "qualified-name": "orm/src.type SqlDate.formatTo()",
-            "selected-name": "format_to_766"
+            "selected-name": "format_to_775"
         },
         {
             "qualified-name": "orm/src.type SqlDate.constructor()",
-            "selected-name": "constructor_769"
+            "selected-name": "constructor_779"
         },
         {
             "qualified-name": "orm/src.type SqlFloat64.value",
-            "selected-name": "value_771"
+            "selected-name": "value_781"
         },
         {
             "qualified-name": "orm/src.type SqlFloat64.formatTo()",
-            "selected-name": "format_to_772"
+            "selected-name": "format_to_782"
+        },
+        {
+            "qualified-name": "orm/src.type SqlFloat64.formatTo().s=",
+            "selected-name": "s_785"
         },
         {
             "qualified-name": "orm/src.type SqlFloat64.constructor()",
-            "selected-name": "constructor_775"
+            "selected-name": "constructor_786"
         },
         {
             "qualified-name": "orm/src.type SqlInt32.value",
-            "selected-name": "value_777"
+            "selected-name": "value_788"
         },
         {
             "qualified-name": "orm/src.type SqlInt32.formatTo()",
-            "selected-name": "format_to_778"
+            "selected-name": "format_to_789"
         },
         {
             "qualified-name": "orm/src.type SqlInt32.constructor()",
-            "selected-name": "constructor_781"
+            "selected-name": "constructor_792"
         },
         {
             "qualified-name": "orm/src.type SqlInt64.value",
-            "selected-name": "value_783"
+            "selected-name": "value_794"
         },
         {
             "qualified-name": "orm/src.type SqlInt64.formatTo()",
-            "selected-name": "format_to_784"
+            "selected-name": "format_to_795"
         },
         {
             "qualified-name": "orm/src.type SqlInt64.constructor()",
-            "selected-name": "constructor_787"
+            "selected-name": "constructor_798"
         },
         {
             "qualified-name": "orm/src.type SqlString.value",
-            "selected-name": "value_789"
+            "selected-name": "value_800"
         },
         {
             "qualified-name": "orm/src.type SqlString.formatTo()",
-            "selected-name": "format_to_790"
+            "selected-name": "format_to_801"
         },
         {
             "qualified-name": "orm/src.type SqlString.constructor()",
-            "selected-name": "constructor_794"
+            "selected-name": "constructor_805"
         },
         {
             "qualified-name": "orm/src.changeset()",
@@ -874,19 +878,19 @@
         },
         {
             "qualified-name": "orm/src.isIdentStart()",
-            "selected-name": "is_ident_start_296"
+            "selected-name": "is_ident_start_305"
         },
         {
             "qualified-name": "orm/src.isIdentStart().return",
-            "selected-name": "return_221"
+            "selected-name": "return_230"
         },
         {
             "qualified-name": "orm/src.isIdentPart()",
-            "selected-name": "is_ident_part_297"
+            "selected-name": "is_ident_part_306"
         },
         {
             "qualified-name": "orm/src.isIdentPart().return",
-            "selected-name": "return_222"
+            "selected-name": "return_231"
         },
         {
             "qualified-name": "orm/src.safeIdentifier()",
@@ -894,247 +898,247 @@
         },
         {
             "qualified-name": "orm/src.safeIdentifier().idx=",
-            "selected-name": "idx_632"
+            "selected-name": "idx_641"
         },
         {
             "qualified-name": "orm/src.csid()",
-            "selected-name": "csid_293"
+            "selected-name": "csid_302"
         },
         {
             "qualified-name": "orm/src.userTable()",
-            "selected-name": "user_table_294"
+            "selected-name": "user_table_303"
         },
         {
             "qualified-name": "orm/src.params=#0",
-            "selected-name": "params_442"
-        },
-        {
-            "qualified-name": "orm/src.cs=#0",
-            "selected-name": "cs_443"
-        },
-        {
-            "qualified-name": "orm/src.params=#1",
-            "selected-name": "params_445"
-        },
-        {
-            "qualified-name": "orm/src.cs=#1",
-            "selected-name": "cs_446"
-        },
-        {
-            "qualified-name": "orm/src.params=#2",
-            "selected-name": "params_448"
-        },
-        {
-            "qualified-name": "orm/src.cs=#2",
-            "selected-name": "cs_449"
-        },
-        {
-            "qualified-name": "orm/src.params=#3",
             "selected-name": "params_451"
         },
         {
-            "qualified-name": "orm/src.cs=#3",
+            "qualified-name": "orm/src.cs=#0",
             "selected-name": "cs_452"
         },
         {
-            "qualified-name": "orm/src.params=#4",
+            "qualified-name": "orm/src.params=#1",
             "selected-name": "params_454"
         },
         {
-            "qualified-name": "orm/src.cs=#4",
+            "qualified-name": "orm/src.cs=#1",
             "selected-name": "cs_455"
         },
         {
-            "qualified-name": "orm/src.params=#5",
+            "qualified-name": "orm/src.params=#2",
             "selected-name": "params_457"
         },
         {
-            "qualified-name": "orm/src.cs=#5",
+            "qualified-name": "orm/src.cs=#2",
             "selected-name": "cs_458"
         },
         {
-            "qualified-name": "orm/src.params=#6",
+            "qualified-name": "orm/src.params=#3",
             "selected-name": "params_460"
         },
         {
-            "qualified-name": "orm/src.cs=#6",
+            "qualified-name": "orm/src.cs=#3",
             "selected-name": "cs_461"
         },
         {
-            "qualified-name": "orm/src.params=#7",
+            "qualified-name": "orm/src.params=#4",
             "selected-name": "params_463"
         },
         {
-            "qualified-name": "orm/src.cs=#7",
+            "qualified-name": "orm/src.cs=#4",
             "selected-name": "cs_464"
         },
         {
-            "qualified-name": "orm/src.params=#8",
+            "qualified-name": "orm/src.params=#5",
             "selected-name": "params_466"
         },
         {
-            "qualified-name": "orm/src.cs=#8",
+            "qualified-name": "orm/src.cs=#5",
             "selected-name": "cs_467"
         },
         {
-            "qualified-name": "orm/src.params=#9",
+            "qualified-name": "orm/src.params=#6",
             "selected-name": "params_469"
         },
         {
-            "qualified-name": "orm/src.cs=#9",
+            "qualified-name": "orm/src.cs=#6",
             "selected-name": "cs_470"
         },
         {
-            "qualified-name": "orm/src.params=#10",
+            "qualified-name": "orm/src.params=#7",
             "selected-name": "params_472"
         },
         {
-            "qualified-name": "orm/src.cs=#10",
+            "qualified-name": "orm/src.cs=#7",
             "selected-name": "cs_473"
         },
         {
-            "qualified-name": "orm/src.params=#11",
+            "qualified-name": "orm/src.params=#8",
             "selected-name": "params_475"
         },
         {
-            "qualified-name": "orm/src.cs=#11",
+            "qualified-name": "orm/src.cs=#8",
             "selected-name": "cs_476"
         },
         {
-            "qualified-name": "orm/src.params=#12",
+            "qualified-name": "orm/src.params=#9",
             "selected-name": "params_478"
         },
         {
-            "qualified-name": "orm/src.cs=#12",
+            "qualified-name": "orm/src.cs=#9",
             "selected-name": "cs_479"
         },
         {
+            "qualified-name": "orm/src.params=#10",
+            "selected-name": "params_481"
+        },
+        {
+            "qualified-name": "orm/src.cs=#10",
+            "selected-name": "cs_482"
+        },
+        {
+            "qualified-name": "orm/src.params=#11",
+            "selected-name": "params_484"
+        },
+        {
+            "qualified-name": "orm/src.cs=#11",
+            "selected-name": "cs_485"
+        },
+        {
+            "qualified-name": "orm/src.params=#12",
+            "selected-name": "params_487"
+        },
+        {
+            "qualified-name": "orm/src.cs=#12",
+            "selected-name": "cs_488"
+        },
+        {
             "qualified-name": "orm/src.params=#13",
-            "selected-name": "params_482"
+            "selected-name": "params_491"
         },
         {
             "qualified-name": "orm/src.cs=#13",
-            "selected-name": "cs_483"
+            "selected-name": "cs_492"
         },
         {
             "qualified-name": "orm/src.params=#14",
-            "selected-name": "params_486"
+            "selected-name": "params_495"
         },
         {
             "qualified-name": "orm/src.cs=#14",
-            "selected-name": "cs_487"
+            "selected-name": "cs_496"
         },
         {
             "qualified-name": "orm/src.params=#15",
-            "selected-name": "params_490"
+            "selected-name": "params_499"
         },
         {
             "qualified-name": "orm/src.cs=#15",
-            "selected-name": "cs_491"
+            "selected-name": "cs_500"
         },
         {
             "qualified-name": "orm/src.params=#16",
-            "selected-name": "params_493"
+            "selected-name": "params_502"
         },
         {
             "qualified-name": "orm/src.cs=#16",
-            "selected-name": "cs_494"
+            "selected-name": "cs_503"
         },
         {
             "qualified-name": "orm/src.sqlFrag=#0",
-            "selected-name": "sql_frag_495"
+            "selected-name": "sql_frag_504"
         },
         {
             "qualified-name": "orm/src.s=#0",
-            "selected-name": "s_496"
+            "selected-name": "s_505"
         },
         {
             "qualified-name": "orm/src.params=#17",
-            "selected-name": "params_498"
+            "selected-name": "params_507"
         },
         {
             "qualified-name": "orm/src.cs=#17",
-            "selected-name": "cs_499"
+            "selected-name": "cs_508"
         },
         {
             "qualified-name": "orm/src.sqlFrag=#1",
-            "selected-name": "sql_frag_500"
+            "selected-name": "sql_frag_509"
         },
         {
             "qualified-name": "orm/src.s=#1",
-            "selected-name": "s_501"
+            "selected-name": "s_510"
         },
         {
             "qualified-name": "orm/src.params=#18",
-            "selected-name": "params_503"
+            "selected-name": "params_512"
         },
         {
             "qualified-name": "orm/src.cs=#18",
-            "selected-name": "cs_504"
+            "selected-name": "cs_513"
         },
         {
             "qualified-name": "orm/src.sqlFrag=#2",
-            "selected-name": "sql_frag_505"
+            "selected-name": "sql_frag_514"
         },
         {
             "qualified-name": "orm/src.s=#2",
-            "selected-name": "s_506"
+            "selected-name": "s_515"
         },
         {
             "qualified-name": "orm/src.params=#19",
-            "selected-name": "params_508"
-        },
-        {
-            "qualified-name": "orm/src.cs=#19",
-            "selected-name": "cs_509"
-        },
-        {
-            "qualified-name": "orm/src.didBubble=#0",
-            "selected-name": "did_bubble_510"
-        },
-        {
-            "qualified-name": "orm/src.strictTable=",
-            "selected-name": "strict_table_512"
-        },
-        {
-            "qualified-name": "orm/src.params=#20",
-            "selected-name": "params_513"
-        },
-        {
-            "qualified-name": "orm/src.cs=#20",
-            "selected-name": "cs_514"
-        },
-        {
-            "qualified-name": "orm/src.didBubble=#1",
-            "selected-name": "did_bubble_515"
-        },
-        {
-            "qualified-name": "orm/src.params=#21",
             "selected-name": "params_517"
         },
         {
-            "qualified-name": "orm/src.cs=#21",
+            "qualified-name": "orm/src.cs=#19",
             "selected-name": "cs_518"
         },
         {
-            "qualified-name": "orm/src.sqlFrag=#3",
-            "selected-name": "sql_frag_519"
+            "qualified-name": "orm/src.didBubble=#0",
+            "selected-name": "did_bubble_519"
         },
         {
-            "qualified-name": "orm/src.s=#3",
-            "selected-name": "s_520"
+            "qualified-name": "orm/src.strictTable=",
+            "selected-name": "strict_table_521"
         },
         {
-            "qualified-name": "orm/src.params=#22",
+            "qualified-name": "orm/src.params=#20",
             "selected-name": "params_522"
         },
         {
-            "qualified-name": "orm/src.cs=#22",
+            "qualified-name": "orm/src.cs=#20",
             "selected-name": "cs_523"
         },
         {
-            "qualified-name": "orm/src.didBubble=#2",
+            "qualified-name": "orm/src.didBubble=#1",
             "selected-name": "did_bubble_524"
+        },
+        {
+            "qualified-name": "orm/src.params=#21",
+            "selected-name": "params_526"
+        },
+        {
+            "qualified-name": "orm/src.cs=#21",
+            "selected-name": "cs_527"
+        },
+        {
+            "qualified-name": "orm/src.sqlFrag=#3",
+            "selected-name": "sql_frag_528"
+        },
+        {
+            "qualified-name": "orm/src.s=#3",
+            "selected-name": "s_529"
+        },
+        {
+            "qualified-name": "orm/src.params=#22",
+            "selected-name": "params_531"
+        },
+        {
+            "qualified-name": "orm/src.cs=#22",
+            "selected-name": "cs_532"
+        },
+        {
+            "qualified-name": "orm/src.didBubble=#2",
+            "selected-name": "did_bubble_533"
         },
         {
             "qualified-name": "orm/src.deleteSql()",
@@ -1142,7 +1146,7 @@
         },
         {
             "qualified-name": "orm/src.deleteSql().b=",
-            "selected-name": "b_528"
+            "selected-name": "b_537"
         },
         {
             "qualified-name": "orm/src.from()",
@@ -1150,171 +1154,187 @@
         },
         {
             "qualified-name": "orm/src.sid()",
-            "selected-name": "sid_295"
+            "selected-name": "sid_304"
         },
         {
             "qualified-name": "orm/src.q=#0",
-            "selected-name": "q_582"
+            "selected-name": "q_591"
         },
         {
             "qualified-name": "orm/src.q=#1",
-            "selected-name": "q_584"
+            "selected-name": "q_593"
         },
         {
             "qualified-name": "orm/src.q=#2",
-            "selected-name": "q_586"
+            "selected-name": "q_595"
         },
         {
             "qualified-name": "orm/src.q=#3",
-            "selected-name": "q_588"
+            "selected-name": "q_597"
         },
         {
             "qualified-name": "orm/src.q=#4",
-            "selected-name": "q_590"
+            "selected-name": "q_599"
         },
         {
             "qualified-name": "orm/src.q=#5",
-            "selected-name": "q_592"
+            "selected-name": "q_601"
         },
         {
             "qualified-name": "orm/src.q=#6",
-            "selected-name": "q_594"
-        },
-        {
-            "qualified-name": "orm/src.q=#7",
-            "selected-name": "q_596"
-        },
-        {
-            "qualified-name": "orm/src.didBubble=#3",
-            "selected-name": "did_bubble_598"
-        },
-        {
-            "qualified-name": "orm/src.didBubble=#4",
-            "selected-name": "did_bubble_600"
-        },
-        {
-            "qualified-name": "orm/src.minAge=",
-            "selected-name": "min_age_602"
-        },
-        {
-            "qualified-name": "orm/src.q=#8",
             "selected-name": "q_603"
         },
         {
-            "qualified-name": "orm/src.q=#9",
+            "qualified-name": "orm/src.q=#7",
             "selected-name": "q_605"
         },
         {
-            "qualified-name": "orm/src.s=#4",
-            "selected-name": "s_606"
+            "qualified-name": "orm/src.didBubble=#3",
+            "selected-name": "did_bubble_607"
         },
         {
-            "qualified-name": "orm/src.q=#10",
-            "selected-name": "q_608"
+            "qualified-name": "orm/src.didBubble=#4",
+            "selected-name": "did_bubble_609"
         },
         {
-            "qualified-name": "orm/src.s=#5",
-            "selected-name": "s_609"
+            "qualified-name": "orm/src.minAge=",
+            "selected-name": "min_age_611"
         },
         {
-            "qualified-name": "orm/src.didBubble=#5",
-            "selected-name": "did_bubble_611"
+            "qualified-name": "orm/src.q=#8",
+            "selected-name": "q_612"
         },
         {
-            "qualified-name": "orm/src.evil=",
-            "selected-name": "evil_613"
-        },
-        {
-            "qualified-name": "orm/src.q=#11",
+            "qualified-name": "orm/src.q=#9",
             "selected-name": "q_614"
         },
         {
-            "qualified-name": "orm/src.s=#6",
+            "qualified-name": "orm/src.s=#4",
             "selected-name": "s_615"
         },
         {
+            "qualified-name": "orm/src.q=#10",
+            "selected-name": "q_617"
+        },
+        {
+            "qualified-name": "orm/src.s=#5",
+            "selected-name": "s_618"
+        },
+        {
+            "qualified-name": "orm/src.didBubble=#5",
+            "selected-name": "did_bubble_620"
+        },
+        {
+            "qualified-name": "orm/src.evil=",
+            "selected-name": "evil_622"
+        },
+        {
+            "qualified-name": "orm/src.q=#11",
+            "selected-name": "q_623"
+        },
+        {
+            "qualified-name": "orm/src.s=#6",
+            "selected-name": "s_624"
+        },
+        {
             "qualified-name": "orm/src.attack=",
-            "selected-name": "attack_617"
+            "selected-name": "attack_626"
         },
         {
             "qualified-name": "orm/src.didBubble=#6",
-            "selected-name": "did_bubble_618"
+            "selected-name": "did_bubble_627"
         },
         {
             "qualified-name": "orm/src.id=",
-            "selected-name": "id_656"
+            "selected-name": "id_665"
         },
         {
             "qualified-name": "orm/src.didBubble=#7",
-            "selected-name": "did_bubble_658"
+            "selected-name": "did_bubble_667"
         },
         {
             "qualified-name": "orm/src.didBubble=#8",
-            "selected-name": "did_bubble_660"
+            "selected-name": "did_bubble_669"
         },
         {
             "qualified-name": "orm/src.cases=",
-            "selected-name": "cases_662"
+            "selected-name": "cases_671"
         },
         {
             "qualified-name": "orm/src.didBubble=#9",
-            "selected-name": "did_bubble_664"
+            "selected-name": "did_bubble_673"
         },
         {
             "qualified-name": "orm/src.td=#0",
-            "selected-name": "td_666"
+            "selected-name": "td_675"
         },
         {
             "qualified-name": "orm/src.f=",
-            "selected-name": "f_667"
+            "selected-name": "f_676"
         },
         {
             "qualified-name": "orm/src.td=#1",
-            "selected-name": "td_669"
+            "selected-name": "td_678"
         },
         {
             "qualified-name": "orm/src.didBubble=#10",
-            "selected-name": "did_bubble_670"
+            "selected-name": "did_bubble_679"
         },
         {
             "qualified-name": "orm/src.required=",
-            "selected-name": "required_672"
+            "selected-name": "required_681"
         },
         {
             "qualified-name": "orm/src.optional=",
-            "selected-name": "optional_673"
+            "selected-name": "optional_682"
         },
         {
             "qualified-name": "orm/src.build()",
-            "selected-name": "build_797"
+            "selected-name": "build_808"
         },
         {
             "qualified-name": "orm/src.buildWrong()",
-            "selected-name": "build_wrong_798"
+            "selected-name": "build_wrong_809"
         },
         {
             "qualified-name": "orm/src.bobbyTables=",
-            "selected-name": "bobby_tables_803"
+            "selected-name": "bobby_tables_814"
         },
         {
             "qualified-name": "orm/src.date=",
-            "selected-name": "date_806"
+            "selected-name": "date_817"
         },
         {
             "qualified-name": "orm/src.dates=",
-            "selected-name": "dates_808"
+            "selected-name": "dates_819"
+        },
+        {
+            "qualified-name": "orm/src.nan=",
+            "selected-name": "nan_821"
+        },
+        {
+            "qualified-name": "orm/src.inf=",
+            "selected-name": "inf_823"
+        },
+        {
+            "qualified-name": "orm/src.ninf=",
+            "selected-name": "ninf_825"
+        },
+        {
+            "qualified-name": "orm/src.d=",
+            "selected-name": "d_828"
         },
         {
             "qualified-name": "orm/src.name=",
-            "selected-name": "name_810"
+            "selected-name": "name_830"
         },
         {
             "qualified-name": "orm/src.condition=",
-            "selected-name": "condition_811"
+            "selected-name": "condition_831"
         },
         {
             "qualified-name": "orm/src.parts=",
-            "selected-name": "parts_812"
+            "selected-name": "parts_832"
         }
     ]
 }

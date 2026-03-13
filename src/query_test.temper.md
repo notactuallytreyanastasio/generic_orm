@@ -109,3 +109,75 @@
       let didBubble = do { safeIdentifier(attack); false } orelse true;
       assert(didBubble) { "metacharacter-containing name must be rejected at construction" };
     }
+
+    test("innerJoin produces INNER JOIN") {
+      let q = from(sid("users"))
+        .innerJoin(sid("orders"), sql"users.id = orders.user_id");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id"
+      ) { "inner join" };
+    }
+
+    test("leftJoin produces LEFT JOIN") {
+      let q = from(sid("users"))
+        .leftJoin(sid("profiles"), sql"users.id = profiles.user_id");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users LEFT JOIN profiles ON users.id = profiles.user_id"
+      ) { "left join" };
+    }
+
+    test("rightJoin produces RIGHT JOIN") {
+      let q = from(sid("orders"))
+        .rightJoin(sid("users"), sql"orders.user_id = users.id");
+      assert(
+        q.toSql().toString() == "SELECT * FROM orders RIGHT JOIN users ON orders.user_id = users.id"
+      ) { "right join" };
+    }
+
+    test("fullJoin produces FULL OUTER JOIN") {
+      let q = from(sid("users"))
+        .fullJoin(sid("orders"), sql"users.id = orders.user_id");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users FULL OUTER JOIN orders ON users.id = orders.user_id"
+      ) { "full join" };
+    }
+
+    test("chained joins") {
+      let q = from(sid("users"))
+        .innerJoin(sid("orders"), sql"users.id = orders.user_id")
+        .leftJoin(sid("profiles"), sql"users.id = profiles.user_id");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id LEFT JOIN profiles ON users.id = profiles.user_id"
+      ) { "chained joins" };
+    }
+
+    test("join with where and orderBy") {
+      let q = do {
+        from(sid("users"))
+          .innerJoin(sid("orders"), sql"users.id = orders.user_id")
+          .where(sql"orders.total > ${100}")
+          .orderBy(sid("name"), true)
+          .limit(10)
+      } orelse panic();
+      assert(
+        q.toSql().toString() == "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id WHERE orders.total > 100 ORDER BY name ASC LIMIT 10"
+      ) { "join with where/order/limit" };
+    }
+
+    test("col helper produces qualified reference") {
+      let c = col(sid("users"), sid("id"));
+      assert(c.toString() == "users.id") { "col helper" };
+    }
+
+    test("join with col helper") {
+      let onCond = col(sid("users"), sid("id"));
+      let b = new SqlBuilder();
+      b.appendFragment(onCond);
+      b.appendSafe(" = ");
+      b.appendFragment(col(sid("orders"), sid("user_id")));
+      let q = from(sid("users"))
+        .innerJoin(sid("orders"), b.accumulated);
+      assert(
+        q.toSql().toString() == "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id"
+      ) { "join with col" };
+    }

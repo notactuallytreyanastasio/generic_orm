@@ -829,6 +829,10 @@
             "selected-name": "formatTo"
         },
         {
+            "qualified-name": "orm/src.type SqlFloat64.formatTo().s=",
+            "selected-name": "s"
+        },
+        {
             "qualified-name": "orm/src.type SqlFloat64.constructor()",
             "selected-name": "constructor"
         },
@@ -1303,6 +1307,22 @@
         {
             "qualified-name": "orm/src.dates=",
             "selected-name": "dates"
+        },
+        {
+            "qualified-name": "orm/src.nan=",
+            "selected-name": "nan"
+        },
+        {
+            "qualified-name": "orm/src.inf=",
+            "selected-name": "inf"
+        },
+        {
+            "qualified-name": "orm/src.ninf=",
+            "selected-name": "ninf"
+        },
+        {
+            "qualified-name": "orm/src.d=",
+            "selected-name": "d"
         },
         {
             "qualified-name": "orm/src.name=",
