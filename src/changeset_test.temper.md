@@ -235,3 +235,332 @@
       let didBubble = do { cs.toUpdateSql(1); false } orelse true;
       assert(didBubble) { "invalid changeset should bubble" };
     }
+
+## putChange
+
+    test("putChange adds a new field") {
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .putChange(csid("email"), "alice@example.com");
+      assert(cs.changes.has("email")) { "email should be in changes" };
+      assert(cs.changes.getOr("email", "") == "alice@example.com") { "email value" };
+    }
+
+    test("putChange overwrites existing field") {
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .putChange(csid("name"), "Bob");
+      assert(cs.changes.getOr("name", "") == "Bob") { "name should be overwritten" };
+    }
+
+    test("putChange value appears in toInsertSql") {
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("email", "a@example.com"),
+      ]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name"), csid("email")])
+        .putChange(csid("name"), "Bob");
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("'Bob'") is StringIndex) { "should use putChange value: ${s}" };
+    }
+
+## getChange
+
+    test("getChange returns value for existing field") {
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(userTable(), params).cast([csid("name")]);
+      let val = cs.getChange(csid("name")) orelse panic();
+      assert(val == "Alice") { "should return Alice" };
+    }
+
+    test("getChange bubbles on missing field") {
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(userTable(), params).cast([csid("name")]);
+      let didBubble = do { cs.getChange(csid("email")); false } orelse true;
+      assert(didBubble) { "should bubble for missing field" };
+    }
+
+## deleteChange
+
+    test("deleteChange removes field") {
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("email", "a@example.com"),
+      ]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name"), csid("email")])
+        .deleteChange(csid("email"));
+      assert(!cs.changes.has("email")) { "email should be removed" };
+      assert(cs.changes.has("name")) { "name should remain" };
+    }
+
+    test("deleteChange on nonexistent field is no-op") {
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .deleteChange(csid("email"));
+      assert(cs.changes.has("name")) { "name should still be present" };
+      assert(cs.isValid) { "should still be valid" };
+    }
+
+## validateInclusion
+
+    test("validateInclusion passes when value in list") {
+      let params = new Map<String, String>([new Pair("name", "admin")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateInclusion(csid("name"), ["admin", "user", "guest"]);
+      assert(cs.isValid) { "should be valid" };
+    }
+
+    test("validateInclusion fails when value not in list") {
+      let params = new Map<String, String>([new Pair("name", "hacker")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateInclusion(csid("name"), ["admin", "user", "guest"]);
+      assert(!cs.isValid) { "should be invalid" };
+      assert(cs.errors[0].field == "name") { "error on name" };
+    }
+
+    test("validateInclusion skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateInclusion(csid("name"), ["admin", "user"]);
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+## validateExclusion
+
+    test("validateExclusion passes when value not in list") {
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateExclusion(csid("name"), ["root", "admin", "superuser"]);
+      assert(cs.isValid) { "should be valid" };
+    }
+
+    test("validateExclusion fails when value in list") {
+      let params = new Map<String, String>([new Pair("name", "admin")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateExclusion(csid("name"), ["root", "admin", "superuser"]);
+      assert(!cs.isValid) { "should be invalid" };
+      assert(cs.errors[0].field == "name") { "error on name" };
+    }
+
+    test("validateExclusion skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateExclusion(csid("name"), ["root", "admin"]);
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+## validateNumber
+
+    test("validateNumber greaterThan passes") {
+      let params = new Map<String, String>([new Pair("age", "25")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateNumber(csid("age"), new NumberValidationOpts(18.0, null, null, null, null));
+      assert(cs.isValid) { "25 > 18 should pass" };
+    }
+
+    test("validateNumber greaterThan fails") {
+      let params = new Map<String, String>([new Pair("age", "15")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateNumber(csid("age"), new NumberValidationOpts(18.0, null, null, null, null));
+      assert(!cs.isValid) { "15 > 18 should fail" };
+    }
+
+    test("validateNumber lessThan passes") {
+      let params = new Map<String, String>([new Pair("score", "8.5")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, 10.0, null, null, null));
+      assert(cs.isValid) { "8.5 < 10 should pass" };
+    }
+
+    test("validateNumber lessThan fails") {
+      let params = new Map<String, String>([new Pair("score", "12.0")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, 10.0, null, null, null));
+      assert(!cs.isValid) { "12 < 10 should fail" };
+    }
+
+    test("validateNumber greaterThanOrEqual boundary") {
+      let params = new Map<String, String>([new Pair("age", "18")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateNumber(csid("age"), new NumberValidationOpts(null, null, 18.0, null, null));
+      assert(cs.isValid) { "18 >= 18 should pass" };
+    }
+
+    test("validateNumber combined options") {
+      let params = new Map<String, String>([new Pair("score", "5.0")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(0.0, 10.0, null, null, null));
+      assert(cs.isValid) { "5 > 0 and < 10 should pass" };
+    }
+
+    test("validateNumber non-numeric value") {
+      let params = new Map<String, String>([new Pair("age", "abc")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateNumber(csid("age"), new NumberValidationOpts(0.0, null, null, null, null));
+      assert(!cs.isValid) { "non-numeric should fail" };
+      assert(cs.errors[0].message == "must be a number") { "correct error message" };
+    }
+
+    test("validateNumber skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateNumber(csid("age"), new NumberValidationOpts(0.0, null, null, null, null));
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+## validateAcceptance
+
+    test("validateAcceptance passes for true values") {
+      for (let v of ["true", "1", "yes", "on"]) {
+        let params = new Map<String, String>([new Pair("active", v)]);
+        let cs = changeset(userTable(), params)
+          .cast([csid("active")])
+          .validateAcceptance(csid("active"));
+        assert(cs.isValid) { "should accept: ${v}" };
+      }
+    }
+
+    test("validateAcceptance fails for non-true values") {
+      let params = new Map<String, String>([new Pair("active", "false")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("active")])
+        .validateAcceptance(csid("active"));
+      assert(!cs.isValid) { "false should not be accepted" };
+      assert(cs.errors[0].message == "must be accepted") { "correct message" };
+    }
+
+## validateConfirmation
+
+    test("validateConfirmation passes when fields match") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("password"), new StringField(), false),
+        new FieldDef(csid("password_confirmation"), new StringField(), true),
+      ]);
+      let params = new Map<String, String>([
+        new Pair("password", "secret123"),
+        new Pair("password_confirmation", "secret123"),
+      ]);
+      let cs = changeset(tbl, params)
+        .cast([csid("password"), csid("password_confirmation")])
+        .validateConfirmation(csid("password"), csid("password_confirmation"));
+      assert(cs.isValid) { "matching fields should pass" };
+    }
+
+    test("validateConfirmation fails when fields differ") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("password"), new StringField(), false),
+        new FieldDef(csid("password_confirmation"), new StringField(), true),
+      ]);
+      let params = new Map<String, String>([
+        new Pair("password", "secret123"),
+        new Pair("password_confirmation", "wrong456"),
+      ]);
+      let cs = changeset(tbl, params)
+        .cast([csid("password"), csid("password_confirmation")])
+        .validateConfirmation(csid("password"), csid("password_confirmation"));
+      assert(!cs.isValid) { "mismatched fields should fail" };
+      assert(cs.errors[0].field == "password_confirmation") { "error on confirmation field" };
+    }
+
+    test("validateConfirmation fails when confirmation missing") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("password"), new StringField(), false),
+        new FieldDef(csid("password_confirmation"), new StringField(), true),
+      ]);
+      let params = new Map<String, String>([
+        new Pair("password", "secret123"),
+      ]);
+      let cs = changeset(tbl, params)
+        .cast([csid("password")])
+        .validateConfirmation(csid("password"), csid("password_confirmation"));
+      assert(!cs.isValid) { "missing confirmation should fail" };
+    }
+
+## validateContains
+
+    test("validateContains passes when substring found") {
+      let params = new Map<String, String>([new Pair("email", "alice@example.com")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("email")])
+        .validateContains(csid("email"), "@");
+      assert(cs.isValid) { "should pass when @ present" };
+    }
+
+    test("validateContains fails when substring not found") {
+      let params = new Map<String, String>([new Pair("email", "alice-example.com")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("email")])
+        .validateContains(csid("email"), "@");
+      assert(!cs.isValid) { "should fail when @ absent" };
+    }
+
+    test("validateContains skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("email")])
+        .validateContains(csid("email"), "@");
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+## validateStartsWith
+
+    test("validateStartsWith passes") {
+      let params = new Map<String, String>([new Pair("name", "Dr. Smith")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateStartsWith(csid("name"), "Dr.");
+      assert(cs.isValid) { "should pass for Dr. prefix" };
+    }
+
+    test("validateStartsWith fails") {
+      let params = new Map<String, String>([new Pair("name", "Mr. Smith")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateStartsWith(csid("name"), "Dr.");
+      assert(!cs.isValid) { "should fail for Mr. prefix" };
+    }
+
+## validateEndsWith
+
+    test("validateEndsWith passes") {
+      let params = new Map<String, String>([new Pair("email", "alice@example.com")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("email")])
+        .validateEndsWith(csid("email"), ".com");
+      assert(cs.isValid) { "should pass for .com suffix" };
+    }
+
+    test("validateEndsWith fails") {
+      let params = new Map<String, String>([new Pair("email", "alice@example.org")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("email")])
+        .validateEndsWith(csid("email"), ".com");
+      assert(!cs.isValid) { "should fail for .org when expecting .com" };
+    }
+
+    test("validateEndsWith handles repeated suffix correctly") {
+      let params = new Map<String, String>([new Pair("name", "abcabc")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateEndsWith(csid("name"), "abc");
+      assert(cs.isValid) { "abcabc should end with abc" };
+    }

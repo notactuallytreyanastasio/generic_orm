@@ -68,7 +68,7 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 
 - **`Changeset`** — The [changeset pipeline](src/changeset.temper.md) follows Ecto's cast-then-validate pattern. `Changeset` is a *sealed interface* — `ChangesetImpl` is not exported, so the only construction path is through the `changeset()` factory. Raw `params` are never exposed; only whitelisted `changes` are readable. `cast()` requires `List<SafeIdentifier>` for field whitelisting. `toInsertSql()` independently enforces non-nullable fields. Type dispatch uses exhaustive `when` on the sealed `FieldType` union.
 
-- **`Query`** — The [query builder](src/query.temper.md) requires `SafeIdentifier` for table names, selected fields, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` provides CWE-400 protection by enforcing a result set size limit. JOIN type keywords are hardcoded from a sealed `JoinType` interface. WHERE conditions are wrapped in a sealed `WhereClause` interface (`AndCondition`/`OrCondition`) enabling mixed AND/OR logic. Convenience methods (`whereNull`, `whereNotNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`) build SQL fragments internally using only validated identifiers and typed values — no raw strings reach `appendSafe`. The `col()` helper produces qualified column references (`table.column`) from two `SafeIdentifier` values.
+- **`Query`** — The [query builder](src/query.temper.md) requires `SafeIdentifier` for table names, selected fields, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` provides CWE-400 protection by enforcing a result set size limit. JOIN type keywords are hardcoded from a sealed `JoinType` interface (5 variants: INNER, LEFT, RIGHT, FULL OUTER, CROSS). WHERE conditions are wrapped in a sealed `WhereClause` interface (`AndCondition`/`OrCondition`) enabling mixed AND/OR logic. Convenience methods (`whereNull`, `whereNotNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`) build SQL fragments internally using only validated identifiers and typed values — no raw strings reach `appendSafe`. The `col()` helper produces qualified column references (`table.column`) from two `SafeIdentifier` values. Aggregate functions (`countAll`, `countCol`, `sumCol`, `avgCol`, `minCol`, `maxCol`) are free functions returning `SqlFragment` with hardcoded function names. Set operations (`unionSql`, `intersectSql`, etc.) accept only `Query` objects and parenthesize sub-SELECTs. `UpdateQuery` and `DeleteQuery` bubble on missing WHERE clauses to prevent accidental full-table mutations. Row locking (`ForUpdate`/`ForShare`) and ORDER BY nulls position (`NullsFirst`/`NullsLast`) use sealed interfaces with hardcoded keywords.
 
 ### Core API
 
@@ -105,11 +105,23 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 
 **Field types:** `StringField`, `IntField`, `Int64Field`, `FloatField`, `BoolField`, `DateField`
 
-**Query features:** `where`, `orWhere`, `whereNull`, `whereNotNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`, `select`, `selectExpr`, `orderBy`, `limit`, `offset`, `join`, `groupBy`, `having`, `orHaving`, `distinct`, `countSql`, `safeToSql`
+**Query features:** `where`, `orWhere`, `whereNull`, `whereNotNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`, `whereInSubquery`, `select`, `selectExpr`, `orderBy`, `orderByNulls`, `limit`, `offset`, `join`, `crossJoin`, `groupBy`, `having`, `orHaving`, `distinct`, `countSql`, `lock`, `safeToSql`
 
 **Aggregate functions:** `countAll`, `countCol`, `sumCol`, `avgCol`, `minCol`, `maxCol`
 
-**Changeset validations:** `validateRequired`, `validateLength`, `validateInt`, `validateInt64`, `validateFloat`, `validateBool`
+**Set operations:** `unionSql`, `unionAllSql`, `intersectSql`, `exceptSql`
+
+**Subqueries:** `subquery`, `existsSql`, `whereInSubquery`
+
+**Batch mutations:** `update(table).set(field, value).where(cond).toSql()`, `deleteFrom(table).where(cond).toSql()`
+
+**Row locking:** `lock(new ForUpdate())`, `lock(new ForShare())`
+
+**ORDER BY extensions:** `orderByNulls(field, ascending, new NullsFirst())`, `orderByNulls(field, ascending, new NullsLast())`
+
+**Changeset validations:** `validateRequired`, `validateLength`, `validateInt`, `validateInt64`, `validateFloat`, `validateBool`, `validateInclusion`, `validateExclusion`, `validateNumber`, `validateAcceptance`, `validateConfirmation`, `validateContains`, `validateStartsWith`, `validateEndsWith`
+
+**Changeset data manipulation:** `putChange`, `getChange`, `deleteChange`
 
 ### Source Files
 
@@ -118,7 +130,7 @@ All source lives in [`src/`](src/) as Temper literate markdown (`.temper.md`):
 | File | Purpose |
 |------|---------|
 | [`schema.temper.md`](src/schema.temper.md) | `SafeIdentifier`, `FieldType`, `FieldDef`, `TableDef` |
-| [`query.temper.md`](src/query.temper.md) | `Query`, `from()`, `WhereClause`, `AndCondition`, `OrCondition`, `OrderClause`, `JoinType`, `JoinClause`, `col()` |
+| [`query.temper.md`](src/query.temper.md) | `Query`, `from()`, `WhereClause`, `JoinType` (5 variants), `OrderClause`, `NullsPosition`, `LockMode`, `UpdateQuery`, `DeleteQuery`, set operations, subqueries, aggregates |
 | [`changeset.temper.md`](src/changeset.temper.md) | `Changeset`, `changeset()`, cast/validate/SQL pipeline |
 | [`orm.temper.md`](src/orm.temper.md) | `deleteSql()` top-level helper |
 | [`sql_builder.temper.md`](src/sql_builder.temper.md) | `SqlBuilder`, `sql` tag |
@@ -356,7 +368,7 @@ There is no `appendRaw` or bypass method. The only way to get unescaped content 
 
 **Layer 5: Query builder (CWE-89, CWE-400)**
 
-[`Query`](src/query.temper.md) requires `SafeIdentifier` for table names, column selections, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` enforces result set bounds (CWE-400). JOIN type keywords (`INNER JOIN`, `LEFT JOIN`, etc.) are hardcoded from a sealed `JoinType` interface with exactly 4 implementations — no user input can influence the keyword. WHERE conditions are wrapped in a sealed `WhereClause` interface (`AndCondition`/`OrCondition`), and convenience methods (`whereNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`) build fragments internally using only `SafeIdentifier` field names and `SqlPart`/`SqlString` values.
+[`Query`](src/query.temper.md) requires `SafeIdentifier` for table names, column selections, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` enforces result set bounds (CWE-400). JOIN type keywords (`INNER JOIN`, `LEFT JOIN`, `CROSS JOIN`, etc.) are hardcoded from a sealed `JoinType` interface with exactly 5 implementations — no user input can influence the keyword. WHERE conditions are wrapped in a sealed `WhereClause` interface (`AndCondition`/`OrCondition`), and convenience methods (`whereNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`) build fragments internally using only `SafeIdentifier` field names and `SqlPart`/`SqlString` values. `UpdateQuery` and `DeleteQuery` bubble on empty WHERE clauses, preventing accidental full-table mutations. Row locking (`ForUpdate`/`ForShare`) and nulls position (`NullsFirst`/`NullsLast`) use sealed interfaces with hardcoded keywords.
 
 ### ORM-Level Findings
 
@@ -369,7 +381,7 @@ There is no `appendRaw` or bypass method. The only way to get unescaped content 
 
 ### How Each App Uses the ORM vs Raw SQL
 
-Every app needs raw SQL for two things the ORM doesn't cover: DDL (`CREATE TABLE`) and JOINs with aggregates (GROUP BY + COUNT/SUM). The ORM now supports basic JOINs (INNER, LEFT, RIGHT, FULL OUTER) but not yet aggregate functions. All user-facing CRUD flows through the ORM.
+Every app needs raw SQL for DDL (`CREATE TABLE`), which the ORM intentionally does not cover. The ORM now supports JOINs (INNER, LEFT, RIGHT, FULL OUTER, CROSS), aggregate functions (COUNT, SUM, AVG, MIN, MAX), GROUP BY, HAVING, DISTINCT, set operations (UNION, INTERSECT, EXCEPT), subqueries, batch UPDATE/DELETE, row locking, and ORDER BY NULLS FIRST/LAST. All user-facing CRUD flows through the ORM.
 
 | Operation | JS | PY | RS | JV | LU | CS |
 |-----------|----|----|----|----|----|----|
@@ -472,7 +484,7 @@ Three of the four ORM-level findings were fixed in the Temper source, rebuilt ac
 - `SqlFloat64 negative Infinity renders as NULL`
 - `SqlFloat64 normal values still work`
 
-All 105 tests pass across the full suite (85 previous + 20 aggregation tests).
+All 170 tests pass across the full suite.
 
 #### Summary
 
@@ -559,6 +571,36 @@ The ORM's WHERE clause enrichment (Phase 1) adds OR logic, NULL checks, IN, NOT,
 - LIKE/ILIKE patterns go through `SqlString` escaping (single-quote doubling)
 - Empty IN list produces `1 = 0` rather than invalid SQL syntax
 - 21 dedicated test cases verify all operators, chaining, mixed AND/OR logic, and injection attempts
+
+### Aggregation Security Analysis (Phase 2)
+
+All 6 aggregate functions (`countAll`, `countCol`, `sumCol`, `avgCol`, `minCol`, `maxCol`) use hardcoded function name strings via `appendSafe`. Field names require `SafeIdentifier`. `selectExpr`, `groupBy`, `having`/`orHaving` reuse existing safe types (`SqlFragment`, `WhereClause`). `distinct()` is a boolean flag selecting between two hardcoded strings. No new injection vectors.
+
+### Set Operations & Subqueries Security Analysis (Phase 3)
+
+Set operation keywords (`UNION`, `UNION ALL`, `INTERSECT`, `EXCEPT`) are hardcoded string literals. Both operands are `Query` objects (not strings). Sub-SELECTs are parenthesized via hardcoded `(...)`. `subquery()` alias requires `SafeIdentifier`. `existsSql()` wraps in hardcoded `EXISTS (...)`. `whereInSubquery()` combines `SafeIdentifier` field with `Query` subquery. No injection vectors.
+
+### Batch UPDATE/DELETE Security Analysis (Phase 4)
+
+| Component | Type Safety Mechanism | Risk |
+|-----------|----------------------|------|
+| `SetClause.field` | `SafeIdentifier` -- sealed, validated | None |
+| `SetClause.value` | `SqlPart` -- sealed, type-dispatched escaping | None |
+| `UpdateQuery.toSql()` no-WHERE guard | Bubbles on empty conditions | **Prevents full-table UPDATE** |
+| `DeleteQuery.toSql()` no-WHERE guard | Bubbles on empty conditions | **Prevents full-table DELETE** |
+
+### Extended Query Features Security Analysis (Phase 5)
+
+| Component | Type Safety Mechanism | Risk |
+|-----------|----------------------|------|
+| `NullsPosition.keyword()` | Sealed interface -- 2 hardcoded strings | None |
+| `CrossJoin.keyword()` | Sealed interface -- hardcoded `"CROSS JOIN"` | None |
+| Nullable `onCondition` | When null, ON clause omitted entirely | None |
+| `LockMode.keyword()` | Sealed interface -- 2 hardcoded strings | None |
+
+### Full Security Research
+
+See [RESEARCH.md](RESEARCH.md) for detailed per-phase MITRE CWE Top 25 analysis with component-level security assessment tables.
 
 ---
 
