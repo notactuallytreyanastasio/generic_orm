@@ -446,6 +446,105 @@ line.line.fill.background()
 tf = add_textbox(slide, MARGIN + Inches(0.25), quote_y, CONTENT_W - Inches(0.25), Inches(0.7))
 add_para(tf, "The best security does not depend on the developer \u2014 or the AI \u2014 remembering to do the right thing. Temper makes the wrong thing impossible to express.", size=14, color=LABEL, italic=True)
 
+# ── SLIDE 9b: Built by AI ──
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_section_header(slide, "Case Study")
+add_title(slide, "This entire project was built by AI")
+add_body(slide, "Everything in this deck was produced by a single developer working with Claude. The ORM, the apps, the security analysis, the fixes, and this deck itself.", top=Inches(1.8), size=16)
+
+rows = [
+    ["What", "How", "Result"],
+    ["ORM source (Temper)", "AI-generated with iterative prompts", "5 defense layers, 56 tests, 0 vulns"],
+    ["6 todo-list applications", "AI-generated per language", "6 frameworks, identical functionality"],
+    ["CI/CD pipeline", "AI-generated GitHub Actions", "12 repos, automated cascade"],
+    ["MITRE/CWE security audit", "AI-conducted analysis", "4 ORM findings, 0 app-level injection"],
+    ["Bug fixes (ORM-1/2/3)", "AI-identified and AI-fixed", "1 commit, 6 backends patched"],
+    ["Verification", "AI grepped compiled output", "Fixes confirmed in all backends"],
+]
+cw = Inches(11.733)
+col_ws = [Emu(int(cw * r)) for r in [0.28, 0.38, 0.34]]
+add_table(slide, rows, col_ws, Inches(2.6))
+
+tf = add_body(slide, "", top=Inches(6.0))
+p = tf.paragraphs[0]
+set_run(p, "The AI did not need to know 6 languages to secure 6 backends. It worked in ", 16, BODY)
+set_run(p, "one language", 16, BLACK, bold=True)
+set_run(p, " and the compiler did the rest. This is the workflow AI-driven development needs.", 16, BODY)
+
+# ── SLIDE 9c: AI Agents + Temper ──
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_section_header(slide, "The AI Workflow")
+add_title(slide, "Why AI agents need typed, cross-compiled foundations")
+add_body(slide, "As AI coding agents move from autocomplete to autonomous engineering, the infrastructure they build on determines whether their output is safe at scale.", top=Inches(1.8), size=16)
+
+card_w = Inches(5.6)
+card_h = Inches(3.0)
+card_y = Inches(2.6)
+
+for cx, title, items in [
+    (MARGIN, "The problem with AI + conventional languages", [
+        "AI generates idiomatic code \u2014 including idiomatic mistakes",
+        "Ruby, Python, JS all allow raw string SQL with zero friction",
+        "An agent building SDKs must learn security patterns per language",
+        "Review burden multiplies: N languages \u00d7 M agents \u00d7 K services",
+        "A single missed escaping call in one language = a CVE",
+    ]),
+    (MARGIN + card_w + Inches(0.6), "The advantage of AI + Temper", [
+        "AI writes to a single type system with enforced invariants",
+        "Sealed interfaces make entire vulnerability classes unrepresentable",
+        "Agents work at the abstraction level, not the language level",
+        "Review burden is constant: 1 source, regardless of target count",
+        "Adding a 7th backend target requires zero security re-audit",
+    ]),
+]:
+    shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, cx, card_y, card_w, card_h)
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = WHITE
+    shape.line.color.rgb = BORDER
+    shape.line.width = Pt(0.75)
+
+    tf = add_textbox(slide, cx + Inches(0.25), card_y + Inches(0.2), card_w - Inches(0.5), Inches(0.4))
+    add_para(tf, title, size=14, color=DARK, bold=True)
+
+    tf2 = add_textbox(slide, cx + Inches(0.25), card_y + Inches(0.7), card_w - Inches(0.5), Inches(2.2))
+    for item in items:
+        add_para(tf2, "\u2014  " + item, size=12, color=BODY, space_after=4)
+
+tf = add_body(slide, "", top=Inches(6.0))
+p = tf.paragraphs[0]
+set_run(p, "Temper does not make AI smarter. It makes AI's mistakes ", 16, BODY)
+set_run(p, "structurally harmless", 16, BLACK, bold=True)
+set_run(p, ".", 16, BODY)
+
+# ── SLIDE 9d: Code Review at Scale ──
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_section_header(slide, "AI + Code Review")
+add_title(slide, "Review once, ship to every platform")
+add_body(slide, "The bottleneck in AI-driven development is not code generation. It is code review. Temper compresses the review surface.", top=Inches(1.8), size=16)
+
+add_big_num(slide, "12\u00d7", "review burden today\n(one per language)", Inches(2.0), Inches(2.6), Inches(3.5))
+
+tf_arrow = add_textbox(slide, Inches(5.8), Inches(2.8), Inches(1.5), Inches(0.6))
+add_para(tf_arrow, "\u2192", size=36, color=BORDER, align=PP_ALIGN.CENTER)
+
+add_big_num(slide, "1\u00d7", "review burden with Temper\n(one source of truth)", Inches(7.8), Inches(2.6), Inches(3.5))
+
+bullets = [
+    "AI generates a Temper library \u2014 human reviews one codebase",
+    "Approved code compiles to all targets with identical security properties",
+    "No per-language security specialists needed for generated output",
+    "Audit trail is one git history, not twelve",
+]
+tf = add_textbox(slide, MARGIN + Inches(0.2), Inches(4.6), CONTENT_W - Inches(0.2), Inches(1.5))
+for b in bullets:
+    add_para(tf, "\u2014  " + b, size=14, color=BODY, space_after=4)
+
+tf2 = add_body(slide, "", top=Inches(6.0))
+p = tf2.paragraphs[0]
+set_run(p, "When your organization ships SDKs in 12 languages, the difference between reviewing 12 AI-generated codebases and reviewing 1 is the difference between ", 16, BODY)
+set_run(p, "possible and impossible", 16, BLACK, bold=True)
+set_run(p, ".", 16, BODY)
+
 # ── SLIDE 10: AWS Scale ──
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 add_section_header(slide, "At Scale")

@@ -275,6 +275,78 @@
   </blockquote>
 </section>
 
+<!-- SLIDE 9b: This Project Was Built by AI -->
+<section>
+  <h3>Case Study</h3>
+  <h2>This entire project was built by AI</h2>
+  <p style="margin-bottom: 0.4em;">Everything you have seen in this deck was produced by a single developer working with Claude. The ORM, the apps, the security analysis, the fixes, and this deck itself.</p>
+  <table>
+    <tr><th>What</th><th>How</th><th>Result</th></tr>
+    <tr><td>ORM source (Temper)</td><td>AI-generated with iterative prompts</td><td>5 defense layers, 56 tests, 0 vulns</td></tr>
+    <tr><td>6 todo-list applications</td><td>AI-generated per language</td><td>6 frameworks, identical functionality</td></tr>
+    <tr><td>CI/CD pipeline</td><td>AI-generated GitHub Actions</td><td>12 repos, automated cascade</td></tr>
+    <tr><td>MITRE/CWE security audit</td><td>AI-conducted analysis</td><td>4 ORM findings, 0 app-level injection</td></tr>
+    <tr><td>Bug fixes (ORM-1/2/3)</td><td>AI-identified and AI-fixed</td><td>1 commit, 6 backends patched</td></tr>
+    <tr><td>Verification</td><td>AI grepped compiled output</td><td>Fixes confirmed in all backends</td></tr>
+  </table>
+  <p style="margin-top: 0.4em;">The AI did not need to know 6 languages to secure 6 backends. It worked in <strong>one language</strong> and the compiler did the rest. This is the workflow AI-driven development needs.</p>
+</section>
+
+<!-- SLIDE 9c: AI Agents + Temper -->
+<section>
+  <h3>The AI Workflow</h3>
+  <h2>Why AI agents need typed, cross-compiled foundations</h2>
+  <p style="margin-bottom: 0.4em;">As AI coding agents move from autocomplete to autonomous engineering, the infrastructure they build on determines whether their output is safe at scale.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h4>The problem with AI + conventional languages</h4>
+      <ul>
+        <li>AI generates idiomatic code &mdash; including idiomatic mistakes</li>
+        <li>Ruby, Python, JS all allow raw string SQL with zero friction</li>
+        <li>An agent building SDKs must learn security patterns per language</li>
+        <li>Review burden multiplies: N languages &times; M agents &times; K services</li>
+        <li>A single missed escaping call in one language = a CVE</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>The advantage of AI + Temper</h4>
+      <ul>
+        <li>AI writes to a single type system with enforced invariants</li>
+        <li>Sealed interfaces make entire vulnerability classes unrepresentable</li>
+        <li>Agents work at the abstraction level, not the language level</li>
+        <li>Review burden is constant: 1 source, regardless of target count</li>
+        <li>Adding a 7th backend target requires zero security re-audit</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top: 0.4em;">Temper does not make AI smarter. It makes AI's mistakes <strong>structurally harmless</strong>.</p>
+</section>
+
+<!-- SLIDE 9d: Code Review at Scale -->
+<section>
+  <h3>AI + Code Review</h3>
+  <h2>Review once, ship to every platform</h2>
+  <p>The bottleneck in AI-driven development is not code generation. It is code review. Temper compresses the review surface.</p>
+  <div class="stat-row" style="margin: 0.6em 0;">
+    <div class="stat">
+      <div class="big-num" style="font-size: 2.5em;">12&times;</div>
+      <div class="label">review burden today<br>(one per language)</div>
+    </div>
+    <div class="stat" style="align-self: center; color: #ccc; font-size: 1.2em;">&rarr;</div>
+    <div class="stat">
+      <div class="big-num" style="font-size: 2.5em;">1&times;</div>
+      <div class="label">review burden with Temper<br>(one source of truth)</div>
+    </div>
+  </div>
+  <ul>
+    <li>AI generates a Temper library &mdash; human reviews <strong>one codebase</strong></li>
+    <li>Approved code compiles to all targets with <strong>identical security properties</strong></li>
+    <li>No per-language security specialists needed for generated output</li>
+    <li>Audit trail is one git history, not twelve</li>
+  </ul>
+  <p style="margin-top: 0.4em;">When your organization ships SDKs in 12 languages, the difference between reviewing 12 AI-generated codebases and reviewing 1 is the difference between <strong>possible and impossible</strong>.</p>
+</section>
+
 <!-- SLIDE 10: AWS Scale -->
 <section>
   <h3>At Scale</h3>
