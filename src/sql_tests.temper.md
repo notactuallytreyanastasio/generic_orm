@@ -92,6 +92,36 @@ TODO If contextual, we could put parens around automatically when needed.
       );
     }
 
+## Float64 edge cases
+
+    test("SqlFloat64 NaN renders as NULL") {
+      let nan = 0.0 / 0.0;
+      assert(sql"v = ${nan}".toString() == "v = NULL");
+    }
+
+    test("SqlFloat64 Infinity renders as NULL") {
+      let inf = 1.0 / 0.0;
+      assert(sql"v = ${inf}".toString() == "v = NULL");
+    }
+
+    test("SqlFloat64 negative Infinity renders as NULL") {
+      let ninf = -1.0 / 0.0;
+      assert(sql"v = ${ninf}".toString() == "v = NULL");
+    }
+
+    test("SqlFloat64 normal values still work") {
+      assert(sql"v = ${3.14}".toString() == "v = 3.14");
+      assert(sql"v = ${0.0}".toString() == "v = 0.0");
+      assert(sql"v = ${-42.5}".toString() == "v = -42.5");
+    }
+
+## Date escaping
+
+    test("SqlDate renders with quotes") {
+      let d = new Date(2024, 6, 15) orelse panic();
+      assert(sql"v = ${d}".toString() == "v = '2024-06-15'");
+    }
+
 ## Nesting
 
 Put already escaped SQL into another SQL fragment.

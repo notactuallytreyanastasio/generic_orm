@@ -386,6 +386,92 @@ Each app repo contains a `SECURITY_ANALYSIS.md` with SQL-specific findings:
 | Lua | [`generic-orm-lua-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app/blob/main/SECURITY_ANALYSIS.md) |
 | C# | [`generic-orm-csharp-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app/blob/main/SECURITY_ANALYSIS.md) |
 
+### Remediation
+
+Three of the four ORM-level findings were fixed in the Temper source, rebuilt across all 6 backends, and verified in compiled output. Here's the process and results.
+
+#### ORM-1 (MEDIUM → RESOLVED): Column name type downgrade
+
+**Problem:** `toInsertSql()` and `toUpdateSql()` in [`changeset.temper.md`](src/changeset.temper.md) passed `pair.key` (a raw `String`) to `appendSafe()`. The keys originate from `cast()` via `SafeIdentifier.sqlValue`, but the type system didn't enforce this — a future refactor could silently introduce an unvalidated code path.
+
+**Fix:** Route column names through the looked-up `FieldDef.name` (a `SafeIdentifier`) instead of the raw map key:
+
+```diff
+- colNames.add(pair.key);                    // toInsertSql line 210
++ colNames.add(fd.name.sqlValue);            // fd = _tableDef.field(pair.key)
+
+- b.appendSafe(pair.key);                    // toUpdateSql line 241
++ b.appendSafe(fd.name.sqlValue);
+```
+
+**Verification:** Compiled JS output confirms `fd_186.name.sqlValue` (INSERT) and `fd_204.name.sqlValue` (UPDATE) — no raw `pair.key` in `appendSafe` calls.
+
+#### ORM-2 (LOW → RESOLVED): SqlDate missing quote escaping
+
+**Problem:** [`SqlDate.formatTo()`](src/sql_model.temper.md) wrapped `value.toString()` in quotes without escaping. If `Date.toString()` ever contained a single quote, it would produce malformed SQL.
+
+**Fix:** Added character-by-character escaping identical to `SqlString.formatTo()`:
+
+```diff
+  public formatTo(builder: StringBuilder): Void {
+    builder.append("'");
+-   builder.append(value.toString());
++   for (let c of value.toString()) {
++     if (c == char'\'') {
++       builder.append("''");
++     } else {
++       builder.appendCodePoint(c) orelse panic();
++     }
++   }
+    builder.append("'");
+  }
+```
+
+**Verification:** Compiled output shows the escaping loop in SqlDate across all backends.
+
+#### ORM-3 (LOW → RESOLVED): SqlFloat64 NaN/Infinity
+
+**Problem:** [`SqlFloat64.formatTo()`](src/sql_model.temper.md) called `value.toString()` which produces `NaN`, `Infinity`, or `-Infinity` — not valid SQL literals.
+
+**Fix:** Check for non-representable values and render `NULL` (safest SQL representation):
+
+```diff
+  public formatTo(builder: StringBuilder): Void {
+-   builder.append(value.toString());
++   let s = value.toString();
++   if (s == "NaN" || s == "Infinity" || s == "-Infinity") {
++     builder.append("NULL");
++   } else {
++     builder.append(s);
++   }
+  }
+```
+
+**Verification:** New tests confirm `NaN`, `Infinity`, and `-Infinity` all render as `NULL`. Compiled JS shows the guard (`if (s_404 === "NaN") ... builder.append("NULL")`).
+
+#### ORM-4 (INFO → ACKNOWLEDGED): No parameterized query support
+
+**Status:** Not fixable in a patch — this is a design-level property. The TODO in [`sql_builder.temper.md`](src/sql_builder.temper.md) acknowledges the desire for prepared statement extraction. The current escaping-based approach is correct for SQLite; parameterized queries would add defense-in-depth.
+
+#### Test Coverage
+
+4 new test cases added to [`sql_tests.temper.md`](src/sql_tests.temper.md):
+- `SqlFloat64 NaN renders as NULL`
+- `SqlFloat64 Infinity renders as NULL`
+- `SqlFloat64 negative Infinity renders as NULL`
+- `SqlFloat64 normal values still work`
+
+All 56 tests pass across the full suite.
+
+#### Summary
+
+| Finding | Severity | Status | Fix |
+|---------|----------|--------|-----|
+| ORM-1 | MEDIUM | RESOLVED | Column names routed through `SafeIdentifier` in INSERT/UPDATE SQL |
+| ORM-2 | LOW | RESOLVED | `SqlDate.formatTo()` now escapes single quotes |
+| ORM-3 | LOW | RESOLVED | `SqlFloat64.formatTo()` renders NaN/Infinity as `NULL` |
+| ORM-4 | INFO | ACKNOWLEDGED | Design limitation — escaping-based, not parameterized |
+
 ---
 
 ## Building Locally

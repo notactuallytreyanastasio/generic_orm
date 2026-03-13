@@ -68,10 +68,16 @@ needing escaped and/or represented properly for a particular DB dialect.
 
     export class SqlDate(public value: Date) extends SqlPart {
 
-      // formatTo
+      // formatTo: quote-wraps with escaping (defense-in-depth against future Date formats)
       public formatTo(builder: StringBuilder): Void {
         builder.append("'");
-        builder.append(value.toString());
+        for (let c of value.toString()) {
+          if (c == char'\'') {
+            builder.append("''");
+          } else {
+            builder.appendCodePoint(c) orelse panic();
+          }
+        }
         builder.append("'");
       }
 
@@ -81,9 +87,14 @@ needing escaped and/or represented properly for a particular DB dialect.
 
     export class SqlFloat64(public value: Float64) extends SqlPart {
 
-      // formatTo
+      // formatTo: rejects NaN/Infinity which are not valid SQL literals (CWE-20)
       public formatTo(builder: StringBuilder): Void {
-        builder.append(value.toString());
+        let s = value.toString();
+        if (s == "NaN" || s == "Infinity" || s == "-Infinity") {
+          builder.append("NULL");
+        } else {
+          builder.append(s);
+        }
       }
 
     }

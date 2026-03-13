@@ -207,7 +207,7 @@ Not exported — the only path to an instance is through `changeset()`.
         for (var i = 0; i < pairs.length; ++i) {
           let pair = pairs[i];
           let fd = _tableDef.field(pair.key);
-          colNames.add(pair.key);
+          colNames.add(fd.name.sqlValue);
           valParts.add(valueToSqlPart(fd, pair.value));
         }
         let b = new SqlBuilder();
@@ -238,7 +238,7 @@ Not exported — the only path to an instance is through `changeset()`.
           if (i > 0) { b.appendSafe(", "); }
           let pair = pairs[i];
           let fd = _tableDef.field(pair.key);
-          b.appendSafe(pair.key);
+          b.appendSafe(fd.name.sqlValue);
           b.appendSafe(" = ");
           b.appendPart(valueToSqlPart(fd, pair.value));
         }
