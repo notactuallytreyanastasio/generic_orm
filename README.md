@@ -1,0 +1,427 @@
+# Generic Temper ORM
+
+A type-safe, security-focused ORM written in [Temper](https://github.com/temperlang/temper) — a language that compiles to **6 backend targets** from a single source. This repo contains the ORM source, a CI pipeline that compiles and distributes the ORM to per-language library repos, and 6 demo todo-list applications (one per target language) that showcase the ORM in action.
+
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [The ORM](#the-orm)
+  - [Security Model](#security-model)
+  - [Core API](#core-api)
+  - [Source Files](#source-files)
+- [Compilation Targets](#compilation-targets)
+- [Demo Applications](#demo-applications)
+- [CI Pipeline](#ci-pipeline)
+  - [Build Stage](#build-stage)
+  - [Publish Stage](#publish-stage)
+  - [App Vendor Update](#app-vendor-update)
+- [Repository Map](#repository-map)
+- [Building Locally](#building-locally)
+- [Running the Demo Apps](#running-the-demo-apps)
+- [Project Structure](#project-structure)
+
+---
+
+## Architecture Overview
+
+```
+                    ┌────────────────────────┐
+                    │   generic_orm (Temper)  │
+                    │   Single source tree    │
+                    └───────────┬────────────┘
+                                │ temper build
+                    ┌───────────▼────────────┐
+                    │      temper.out/        │
+                    │  js/ py/ rust/ java/    │
+                    │  lua/ csharp/           │
+                    └───────────┬────────────┘
+                                │ CI publish
+        ┌───────┬───────┬───────┼───────┬───────┐
+        ▼       ▼       ▼       ▼       ▼       ▼
+   orm-js   orm-py  orm-rust orm-java orm-lua orm-csharp
+   (lib)    (lib)   (lib)    (lib)    (lib)   (lib)
+        │       │       │       │       │       │
+        │  push triggers notify-app workflow    │
+        ▼       ▼       ▼       ▼       ▼       ▼
+   js-app  py-app  rust-app java-app lua-app csharp-app
+   (demo)  (demo)  (demo)   (demo)  (demo)  (demo)
+```
+
+A push to `main` in this repo triggers CI, which:
+1. Builds the Temper compiler from source
+2. Compiles the ORM for all 6 backends
+3. Runs the test suite (JS backend)
+4. Pushes compiled output to 6 per-language **lib repos**
+5. Each lib repo's push triggers a **notify-app workflow** that vendors the updated ORM into its corresponding **app repo**
+
+---
+
+## The ORM
+
+### Security Model
+
+The ORM is built on a defense-in-depth approach to SQL injection prevention, using Temper's type system to enforce safety at compile time:
+
+- **`SafeIdentifier`** — Table and column names must pass through [`safeIdentifier()`](src/schema.temper.md), which validates against `[a-zA-Z_][a-zA-Z0-9_]*`. The `ValidatedIdentifier` implementation class is *not exported*, so external code cannot construct one without validation. This is the only path to `appendSafe` at runtime.
+
+- **`SqlBuilder`** — The [query builder](src/sql_builder.temper.md) separates SQL structure (`appendSafe`) from user data (`appendString`, `appendInt32`, etc.). User values are typed as `SqlPart` instances that handle escaping per-type. `SqlString` escapes single quotes; `SqlInt32`/`SqlInt64` render bare integers; `SqlBoolean` emits `TRUE`/`FALSE` literals.
+
+- **`Changeset`** — The [changeset pipeline](src/changeset.temper.md) follows Ecto's cast-then-validate pattern. `Changeset` is a *sealed interface* — `ChangesetImpl` is not exported, so the only construction path is through the `changeset()` factory. Raw `params` are never exposed; only whitelisted `changes` are readable. `cast()` requires `List<SafeIdentifier>` for field whitelisting. `toInsertSql()` independently enforces non-nullable fields. Type dispatch uses exhaustive `when` on the sealed `FieldType` union.
+
+- **`Query`** — The [query builder](src/query.temper.md) requires `SafeIdentifier` for table names, selected fields, and ORDER BY clauses. WHERE conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` provides CWE-400 protection by enforcing a result set size limit.
+
+### Core API
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  safeIdentifier("users")  →  SafeIdentifier             │
+│                                                         │
+│  TableDef(safeId, [FieldDef(safeId, StringField, false)])│
+│                                                         │
+│  from(safeId)                                           │
+│    .where(sqlFragment)                                  │
+│    .orderBy(safeId, ascending)                          │
+│    .limit(n)                                            │
+│    .toSql()  →  SqlFragment                             │
+│                                                         │
+│  changeset(tableDef, paramsMap)                          │
+│    .cast(allowedFields)                                 │
+│    .validateRequired(fields)                            │
+│    .toInsertSql()  →  SqlFragment                       │
+│    .toUpdateSql(id) → SqlFragment                       │
+│                                                         │
+│  deleteSql(tableDef, id)  →  SqlFragment                │
+│                                                         │
+│  sqlFragment.toString()  →  String  (rendered SQL)       │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Field types:** `StringField`, `IntField`, `Int64Field`, `FloatField`, `BoolField`, `DateField`
+
+**Changeset validations:** `validateRequired`, `validateLength`, `validateInt`, `validateInt64`, `validateFloat`, `validateBool`
+
+### Source Files
+
+All source lives in [`src/`](src/) as Temper literate markdown (`.temper.md`):
+
+| File | Purpose |
+|------|---------|
+| [`schema.temper.md`](src/schema.temper.md) | `SafeIdentifier`, `FieldType`, `FieldDef`, `TableDef` |
+| [`query.temper.md`](src/query.temper.md) | `Query`, `from()`, `OrderClause` |
+| [`changeset.temper.md`](src/changeset.temper.md) | `Changeset`, `changeset()`, cast/validate/SQL pipeline |
+| [`orm.temper.md`](src/orm.temper.md) | `deleteSql()` top-level helper |
+| [`sql_builder.temper.md`](src/sql_builder.temper.md) | `SqlBuilder`, `sql` tag |
+| [`sql_model.temper.md`](src/sql_model.temper.md) | `SqlFragment`, `SqlPart`, `SqlString`, `SqlInt32`, etc. |
+| [`sql_imports.temper.md`](src/sql_imports.temper.md) | Re-exports from vendored `secure-composition` |
+| [`schema_test.temper.md`](src/schema_test.temper.md) | Schema tests |
+| [`query_test.temper.md`](src/query_test.temper.md) | Query builder tests |
+| [`changeset_test.temper.md`](src/changeset_test.temper.md) | Changeset tests |
+| [`sql_tests.temper.md`](src/sql_tests.temper.md) | SQL builder/model tests |
+
+The library name is defined in [`config.temper.md`](config.temper.md).
+
+---
+
+## Compilation Targets
+
+The Temper compiler produces idiomatic output for each backend:
+
+| Target | Output | Runtime |
+|--------|--------|---------|
+| **JavaScript** | ES modules | `@temperlang/core` |
+| **Python** | Python 3 modules | `temper_core` |
+| **Rust** | Cargo crate | `temper-core` |
+| **Java** | Java source files | `temper-core` JAR |
+| **Lua** | Lua modules | `temper` runtime |
+| **C#** | .NET source files | `TemperLang.Core` |
+
+Build output lands in `temper.out/<lang>/` with three subdirectories: `orm/` (the ORM itself), `std/` (Temper standard library), and `temper-core/` (Temper runtime).
+
+---
+
+## Demo Applications
+
+Each demo is a **todo list manager** with the same retro Mac System 6 + Windows 95 hybrid UI theme. All apps support:
+
+- Create, rename, and delete todo lists
+- Create, edit, toggle, and delete todo items within lists
+- Inline editing with confirmation dialogs
+- Completion tracking in the status bar
+
+| Language | Framework | Port | App Repo | Source |
+|----------|-----------|------|----------|--------|
+| **JavaScript** | Express + EJS + better-sqlite3 | 5006 | [`generic-orm-js-app`](https://github.com/notactuallytreyanastasio/generic-orm-js-app) | [`apps/js/`](apps/js/) |
+| **Python** | Flask + sqlite3 | 5001 | [`generic-orm-py-app`](https://github.com/notactuallytreyanastasio/generic-orm-py-app) | [`apps/py/`](apps/py/) |
+| **Rust** | Axum + rusqlite + askama | 5003 | [`generic-orm-rust-app`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app) | [`apps/rust/`](apps/rust/) |
+| **Java** | Spring Boot + SQLite JDBC + Thymeleaf | 5004 | [`generic-orm-java-app`](https://github.com/notactuallytreyanastasio/generic-orm-java-app) | [`apps/java/`](apps/java/) |
+| **Lua** | Raw socket HTTP + lsqlite3 | 5005 | [`generic-orm-lua-app`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app) | [`apps/lua/`](apps/lua/) |
+| **C#** | ASP.NET Core Razor Pages + SQLite | 5002 | [`generic-orm-csharp-app`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app) | [`apps/csharp/`](apps/csharp/) |
+
+### ORM API Usage Across Languages
+
+Each app adapts the same ORM API to its language's idioms. Here's how a SELECT query looks in each:
+
+**JavaScript:**
+```javascript
+import { from, safeIdentifier, SqlBuilder } from 'orm';
+const q = from(safeIdentifier("todos"))
+  .where(whereFragment)
+  .orderBy(safeIdentifier("created_at"), true)
+  .toSql().toString();
+```
+
+**Python:**
+```python
+from orm.src import from_, safe_identifier, SqlBuilder
+q = (from_(safe_identifier("todos"))
+     .where(where_fragment)
+     .order_by(safe_identifier("created_at"), True)
+     .to_sql().to_string())
+```
+
+**Rust:**
+```rust
+use orm::src::{from, safe_identifier, SqlBuilder};
+let q = from(safe_identifier("todos")?)
+    .where_(where_fragment)
+    .order_by(safe_identifier("created_at")?, true)
+    .to_sql().to_string();
+```
+
+**Java:**
+```java
+import orm.src.SrcGlobal;
+String q = SrcGlobal.from(SrcGlobal.safeIdentifier("todos"))
+    .where(whereFragment)
+    .orderBy(SrcGlobal.safeIdentifier("created_at"), true)
+    .toSql().toString();
+```
+
+**Lua:**
+```lua
+local orm = require("orm")
+local q = orm.from(orm.safeIdentifier("todos"))
+    :where(where_fragment)
+    :orderBy(orm.safeIdentifier("created_at"), true)
+    :toSql():toString()
+```
+
+**C#:**
+```csharp
+using Orm.Src;
+var q = SrcGlobal.From(SrcGlobal.SafeIdentifier("todos"))
+    .Where(whereFragment)
+    .OrderBy(SrcGlobal.SafeIdentifier("created_at"), true)
+    .ToSql().ToString();
+```
+
+---
+
+## CI Pipeline
+
+The pipeline is defined in [`.github/workflows/publish-libs.yml`](.github/workflows/publish-libs.yml).
+
+### Build Stage
+
+1. **Checkout** this repository
+2. **Set up JDK 21** (Temurin)
+3. **Clone and build** the [Temper compiler](https://github.com/temperlang/temper) from `main`
+4. **Run `temper build`** — compiles the ORM for all 6 backends into `temper.out/`
+5. **Run `temper test -b js`** — executes the full test suite against the JS backend
+6. **Upload artifacts** — `temper.out/` and the [notify-app template](.github/notify-app-template.yml)
+
+### Publish Stage
+
+A **matrix of 6 jobs** (one per language) runs in parallel after the build:
+
+| Matrix Entry | Lib Repo | App Repo | Vendor Path |
+|-------------|----------|----------|-------------|
+| `js` | [`generic-orm-js`](https://github.com/notactuallytreyanastasio/generic-orm-js) | [`generic-orm-js-app`](https://github.com/notactuallytreyanastasio/generic-orm-js-app) | `vendor` |
+| `py` | [`generic-orm-py`](https://github.com/notactuallytreyanastasio/generic-orm-py) | [`generic-orm-py-app`](https://github.com/notactuallytreyanastasio/generic-orm-py-app) | `vendor` |
+| `rust` | [`generic-orm-rust`](https://github.com/notactuallytreyanastasio/generic-orm-rust) | [`generic-orm-rust-app`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app) | `vendor` |
+| `java` | [`generic-orm-java`](https://github.com/notactuallytreyanastasio/generic-orm-java) | [`generic-orm-java-app`](https://github.com/notactuallytreyanastasio/generic-orm-java-app) | `vendor` |
+| `lua` | [`generic-orm-lua`](https://github.com/notactuallytreyanastasio/generic-orm-lua) | [`generic-orm-lua-app`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app) | `vendor` |
+| `csharp` | [`generic-orm-csharp`](https://github.com/notactuallytreyanastasio/generic-orm-csharp) | [`generic-orm-csharp-app`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app) | `TodoApp/vendor` |
+
+Each publish job:
+1. Downloads the `temper.out/` artifact
+2. Configures SSH with a per-language deploy key (`DEPLOY_KEY_JS`, `DEPLOY_KEY_PY`, etc.)
+3. Clones the target lib repo
+4. Replaces all content with the new build output (orm/ + std/ + temper-core/)
+5. Writes the [notify-app workflow](.github/notify-app-template.yml) into `.github/workflows/`
+6. Commits and pushes
+
+### App Vendor Update
+
+When a lib repo receives a push (from the publish stage above), its [`notify-app.yml`](.github/notify-app-template.yml) workflow:
+1. Clones the corresponding app repo
+2. Removes old `vendor/orm`, `vendor/std`, `vendor/temper-core`
+3. Copies the new compiled output into `vendor/`
+4. Commits and pushes
+
+This creates a fully automated cascade: **ORM source change** -> **build** -> **lib repos** -> **app repos**.
+
+---
+
+## Repository Map
+
+### This Repository (Source)
+
+| Repo | Description |
+|------|-------------|
+| [`generic_orm`](https://github.com/notactuallytreyanastasio/generic_orm) | Temper ORM source, CI pipeline, app source code |
+
+### Library Repos (Compiled Output)
+
+| Repo | Language | Contents |
+|------|----------|----------|
+| [`generic-orm-js`](https://github.com/notactuallytreyanastasio/generic-orm-js) | JavaScript | ES modules |
+| [`generic-orm-py`](https://github.com/notactuallytreyanastasio/generic-orm-py) | Python | Python 3 modules |
+| [`generic-orm-rust`](https://github.com/notactuallytreyanastasio/generic-orm-rust) | Rust | Cargo crate |
+| [`generic-orm-java`](https://github.com/notactuallytreyanastasio/generic-orm-java) | Java | Java source |
+| [`generic-orm-lua`](https://github.com/notactuallytreyanastasio/generic-orm-lua) | Lua | Lua modules |
+| [`generic-orm-csharp`](https://github.com/notactuallytreyanastasio/generic-orm-csharp) | C# | .NET source |
+
+### Application Repos (Demo Apps)
+
+| Repo | Language | Framework |
+|------|----------|-----------|
+| [`generic-orm-js-app`](https://github.com/notactuallytreyanastasio/generic-orm-js-app) | JavaScript | Express + EJS |
+| [`generic-orm-py-app`](https://github.com/notactuallytreyanastasio/generic-orm-py-app) | Python | Flask |
+| [`generic-orm-rust-app`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app) | Rust | Axum + askama |
+| [`generic-orm-java-app`](https://github.com/notactuallytreyanastasio/generic-orm-java-app) | Java | Spring Boot |
+| [`generic-orm-lua-app`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app) | Lua | Raw socket HTTP |
+| [`generic-orm-csharp-app`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app) | C# | ASP.NET Core Razor |
+
+---
+
+## Building Locally
+
+### Prerequisites
+
+- **JDK 21** (for building the Temper compiler)
+- **Node.js 18+** (for running JS tests)
+- **Git**
+
+### Build Steps
+
+```bash
+# Clone and build the Temper compiler
+git clone https://github.com/temperlang/temper.git /tmp/temper
+cd /tmp/temper
+./gradlew cli:installDist --no-daemon
+export PATH="/tmp/temper/cli/build/install/temper/bin:$PATH"
+
+# Clone this repo
+git clone https://github.com/notactuallytreyanastasio/generic_orm.git
+cd generic_orm
+
+# Build all 6 backends
+temper build
+
+# Run tests (JS backend)
+temper test -b js
+```
+
+Build output will be in `temper.out/` with subdirectories for each backend.
+
+---
+
+## Running the Demo Apps
+
+Each app is in [`apps/<lang>/`](apps/) and needs the ORM vendored into its local `vendor/` directory.
+
+### JavaScript
+
+```bash
+cd apps/js
+mkdir -p vendor
+cp -r ../../temper.out/js/{orm,std,temper-core} vendor/
+npm install
+node app.js
+# Open http://localhost:5006
+```
+
+### Python
+
+```bash
+cd apps/py
+mkdir -p vendor
+cp -r ../../temper.out/py/{orm,std,temper-core} vendor/
+pip install flask
+python app.py
+# Open http://localhost:5001
+```
+
+### Rust
+
+```bash
+cd apps/rust
+mkdir -p vendor
+cp -r ../../temper.out/rust/{orm,std,temper-core} vendor/
+cargo run
+# Open http://localhost:5003
+```
+
+### Java
+
+```bash
+cd apps/java
+mkdir -p vendor
+cp -r ../../temper.out/java/{orm,std,temper-core} vendor/
+mvn spring-boot:run
+# Open http://localhost:5004
+```
+
+### Lua
+
+```bash
+cd apps/lua
+mkdir -p vendor
+cp -r ../../temper.out/lua/{orm,std,temper-core} vendor/
+# Requires lsqlite3: luarocks install lsqlite3
+lua app.lua
+# Open http://localhost:5005
+```
+
+### C#
+
+```bash
+cd apps/csharp/TodoApp
+mkdir -p vendor
+cp -r ../../../temper.out/csharp/{orm,std,temper-core} vendor/
+dotnet run
+# Open http://localhost:5002
+```
+
+---
+
+## Project Structure
+
+```
+generic_orm/
+├── config.temper.md              # Library config (defines "orm")
+├── src/                          # Temper source (literate markdown)
+│   ├── schema.temper.md          # SafeIdentifier, TableDef, FieldDef
+│   ├── query.temper.md           # Query builder, from()
+│   ├── changeset.temper.md       # Changeset pipeline
+│   ├── orm.temper.md             # deleteSql() helper
+│   ├── sql_builder.temper.md     # SqlBuilder
+│   ├── sql_model.temper.md       # SqlFragment, SqlPart types
+│   ├── sql_imports.temper.md     # Re-exports from secure-composition
+│   ├── *_test.temper.md          # Test files
+│   └── sql_tests.temper.md       # SQL builder tests
+├── apps/                         # Demo applications
+│   ├── js/                       # Express + EJS
+│   ├── py/                       # Flask
+│   ├── rust/                     # Axum + askama
+│   ├── java/                     # Spring Boot
+│   ├── lua/                      # Raw socket HTTP
+│   └── csharp/                   # ASP.NET Core Razor Pages
+├── .github/
+│   ├── workflows/
+│   │   └── publish-libs.yml      # CI: build + publish to lib repos
+│   └── notify-app-template.yml   # Template: lib repo → app repo vendor update
+├── temper.keep/                  # Temper build config (committed)
+└── temper.out/                   # Build output (gitignored)
+```
