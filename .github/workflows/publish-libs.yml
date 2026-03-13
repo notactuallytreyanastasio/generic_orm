@@ -1,0 +1,162 @@
+name: Publish compiled libs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Clone and build Temper compiler
+        run: |
+          git clone https://github.com/temperlang/temper.git /tmp/temper
+          cd /tmp/temper
+          ./gradlew cli:installDist --no-daemon
+
+      - name: Run temper build
+        run: |
+          export PATH="/tmp/temper/cli/build/install/temper/bin:$PATH"
+          temper build
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run tests (JS)
+        run: |
+          export PATH="/tmp/temper/cli/build/install/temper/bin:$PATH"
+          temper test -b js
+
+      - name: Upload temper.out artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: temper-out
+          path: temper.out/
+          retention-days: 1
+
+      - name: Upload notify-app template
+        uses: actions/upload-artifact@v4
+        with:
+          name: notify-app-template
+          path: .github/notify-app-template.yml
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lang: js
+            lang_upper: JS
+            repo: generic-orm-js
+            app_repo: generic-orm-js-app
+            vendor_path: vendor
+            full_tree: true
+          - lang: py
+            lang_upper: PY
+            repo: generic-orm-py
+            app_repo: generic-orm-py-app
+            vendor_path: vendor
+            full_tree: true
+          - lang: csharp
+            lang_upper: CSHARP
+            repo: generic-orm-csharp
+            app_repo: generic-orm-csharp-app
+            vendor_path: TodoApp/vendor
+            full_tree: true
+          - lang: rust
+            lang_upper: RUST
+            repo: generic-orm-rust
+            app_repo: generic-orm-rust-app
+            vendor_path: vendor
+            full_tree: true
+          - lang: java
+            lang_upper: JAVA
+            repo: generic-orm-java
+            app_repo: generic-orm-java-app
+            vendor_path: vendor
+            full_tree: true
+          - lang: lua
+            lang_upper: LUA
+            repo: generic-orm-lua
+            app_repo: generic-orm-lua-app
+            vendor_path: vendor
+            full_tree: true
+
+    steps:
+      - name: Download temper.out artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: temper-out
+          path: temper.out/
+
+      - name: Download notify-app template
+        uses: actions/download-artifact@v4
+        with:
+          name: notify-app-template
+          path: templates/
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets[format('DEPLOY_KEY_{0}', matrix.lang_upper)] }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global core.sshCommand "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+
+      - name: Clone target lib repo
+        run: |
+          git clone git@github.com:notactuallytreyanastasio/${{ matrix.repo }}.git target-repo
+          cd target-repo
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+      - name: Sync compiled output
+        run: |
+          cd target-repo
+
+          # Remove old files (except .git and workflows)
+          find . -maxdepth 1 -not -name '.git' -not -name '.' -not -name '.github' | xargs rm -rf
+
+          if [ "${{ matrix.full_tree }}" = "true" ]; then
+            # Copy full tree (orm/ + std/ + temper-core/)
+            cp -r ../temper.out/${{ matrix.lang }}/* .
+          else
+            # Copy only orm/ subdir contents
+            cp -r ../temper.out/${{ matrix.lang }}/orm/* .
+          fi
+
+          # Write version info
+          echo "${{ github.sha }}" > VERSION
+
+      - name: Write notify-app workflow
+        run: |
+          mkdir -p target-repo/.github/workflows
+          cp templates/notify-app-template.yml target-repo/.github/workflows/notify-app.yml
+          sed -i "s|__APP_REPO__|${{ matrix.app_repo }}|g" target-repo/.github/workflows/notify-app.yml
+          sed -i "s|__VENDOR_PATH__|${{ matrix.vendor_path }}|g" target-repo/.github/workflows/notify-app.yml
+
+      - name: Commit and push
+        run: |
+          cd target-repo
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update from generic_temper_orm ${{ github.sha }}"
+            git push
+          fi

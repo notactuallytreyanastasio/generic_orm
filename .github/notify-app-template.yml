@@ -1,0 +1,45 @@
+name: Update app vendor
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  update-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout lib repo
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY_APP }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global core.sshCommand "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+
+      - name: Update app repo vendor
+        run: |
+          git clone git@github.com:notactuallytreyanastasio/__APP_REPO__.git app-repo
+          cd app-repo
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          # Remove old vendor content
+          rm -rf __VENDOR_PATH__/orm __VENDOR_PATH__/std __VENDOR_PATH__/temper-core
+          mkdir -p __VENDOR_PATH__
+
+          # Copy new ORM output from lib repo
+          cp -r ../orm __VENDOR_PATH__/orm
+          cp -r ../std __VENDOR_PATH__/std
+          cp -r ../temper-core __VENDOR_PATH__/temper-core
+
+          # Commit and push
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update ORM vendor from ${GITHUB_SHA}"
+            git push
+          fi
