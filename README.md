@@ -1,4 +1,4 @@
-# Generic Temper ORM
+# Alloy
 
 A type-safe, security-focused ORM written in [Temper](https://github.com/temperlang/temper) — a language that compiles to **6 backend targets** from a single source. This repo contains the ORM source, a CI pipeline that compiles and distributes the ORM to per-language library repos, and 6 demo todo-list applications (one per target language) that showcase the ORM in action.
 
@@ -26,7 +26,7 @@ A type-safe, security-focused ORM written in [Temper](https://github.com/temperl
 
 ```
                     ┌────────────────────────┐
-                    │   generic_orm (Temper)  │
+                    │     alloy (Temper)     │
                     │   Single source tree    │
                     └───────────┬────────────┘
                                 │ temper build
@@ -38,7 +38,7 @@ A type-safe, security-focused ORM written in [Temper](https://github.com/temperl
                                 │ CI publish
         ┌───────┬───────┬───────┼───────┬───────┐
         ▼       ▼       ▼       ▼       ▼       ▼
-   orm-js   orm-py  orm-rust orm-java orm-lua orm-csharp
+  alloy-js alloy-py alloy-rust alloy-java alloy-lua alloy-csharp
    (lib)    (lib)   (lib)    (lib)    (lib)   (lib)
         │       │       │       │       │       │
         │  push triggers notify-app workflow    │
@@ -177,12 +177,12 @@ Each demo is a **todo list manager** with the same retro Mac System 6 + Windows 
 
 | Language | Framework | Port | App Repo | Source |
 |----------|-----------|------|----------|--------|
-| **JavaScript** | Express + EJS + better-sqlite3 | 5006 | [`generic-orm-js-app`](https://github.com/notactuallytreyanastasio/generic-orm-js-app) | [`apps/js/`](apps/js/) |
-| **Python** | Flask + sqlite3 | 5001 | [`generic-orm-py-app`](https://github.com/notactuallytreyanastasio/generic-orm-py-app) | [`apps/py/`](apps/py/) |
-| **Rust** | Axum + rusqlite + askama | 5003 | [`generic-orm-rust-app`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app) | [`apps/rust/`](apps/rust/) |
-| **Java** | Spring Boot + SQLite JDBC + Thymeleaf | 5004 | [`generic-orm-java-app`](https://github.com/notactuallytreyanastasio/generic-orm-java-app) | [`apps/java/`](apps/java/) |
-| **Lua** | Raw socket HTTP + lsqlite3 | 5005 | [`generic-orm-lua-app`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app) | [`apps/lua/`](apps/lua/) |
-| **C#** | ASP.NET Core Razor Pages + SQLite | 5002 | [`generic-orm-csharp-app`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app) | [`apps/csharp/`](apps/csharp/) |
+| **JavaScript** | Express + EJS + better-sqlite3 | 5006 | [`alloy-js-app`](https://github.com/notactuallytreyanastasio/alloy-js-app) | [`apps/js/`](apps/js/) |
+| **Python** | Flask + sqlite3 | 5001 | [`alloy-py-app`](https://github.com/notactuallytreyanastasio/alloy-py-app) | [`apps/py/`](apps/py/) |
+| **Rust** | Axum + rusqlite + askama | 5003 | [`alloy-rust-app`](https://github.com/notactuallytreyanastasio/alloy-rust-app) | [`apps/rust/`](apps/rust/) |
+| **Java** | Spring Boot + SQLite JDBC + Thymeleaf | 5004 | [`alloy-java-app`](https://github.com/notactuallytreyanastasio/alloy-java-app) | [`apps/java/`](apps/java/) |
+| **Lua** | Raw socket HTTP + lsqlite3 | 5005 | [`alloy-lua-app`](https://github.com/notactuallytreyanastasio/alloy-lua-app) | [`apps/lua/`](apps/lua/) |
+| **C#** | ASP.NET Core Razor Pages + SQLite | 5002 | [`alloy-csharp-app`](https://github.com/notactuallytreyanastasio/alloy-csharp-app) | [`apps/csharp/`](apps/csharp/) |
 
 ### ORM API Usage Across Languages
 
@@ -263,12 +263,12 @@ A **matrix of 6 jobs** (one per language) runs in parallel after the build:
 
 | Matrix Entry | Lib Repo | App Repo | Vendor Path |
 |-------------|----------|----------|-------------|
-| `js` | [`generic-orm-js`](https://github.com/notactuallytreyanastasio/generic-orm-js) | [`generic-orm-js-app`](https://github.com/notactuallytreyanastasio/generic-orm-js-app) | `vendor` |
-| `py` | [`generic-orm-py`](https://github.com/notactuallytreyanastasio/generic-orm-py) | [`generic-orm-py-app`](https://github.com/notactuallytreyanastasio/generic-orm-py-app) | `vendor` |
-| `rust` | [`generic-orm-rust`](https://github.com/notactuallytreyanastasio/generic-orm-rust) | [`generic-orm-rust-app`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app) | `vendor` |
-| `java` | [`generic-orm-java`](https://github.com/notactuallytreyanastasio/generic-orm-java) | [`generic-orm-java-app`](https://github.com/notactuallytreyanastasio/generic-orm-java-app) | `vendor` |
-| `lua` | [`generic-orm-lua`](https://github.com/notactuallytreyanastasio/generic-orm-lua) | [`generic-orm-lua-app`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app) | `vendor` |
-| `csharp` | [`generic-orm-csharp`](https://github.com/notactuallytreyanastasio/generic-orm-csharp) | [`generic-orm-csharp-app`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app) | `TodoApp/vendor` |
+| `js` | [`alloy-js`](https://github.com/notactuallytreyanastasio/alloy-js) | [`alloy-js-app`](https://github.com/notactuallytreyanastasio/alloy-js-app) | `vendor` |
+| `py` | [`alloy-py`](https://github.com/notactuallytreyanastasio/alloy-py) | [`alloy-py-app`](https://github.com/notactuallytreyanastasio/alloy-py-app) | `vendor` |
+| `rust` | [`alloy-rust`](https://github.com/notactuallytreyanastasio/alloy-rust) | [`alloy-rust-app`](https://github.com/notactuallytreyanastasio/alloy-rust-app) | `vendor` |
+| `java` | [`alloy-java`](https://github.com/notactuallytreyanastasio/alloy-java) | [`alloy-java-app`](https://github.com/notactuallytreyanastasio/alloy-java-app) | `vendor` |
+| `lua` | [`alloy-lua`](https://github.com/notactuallytreyanastasio/alloy-lua) | [`alloy-lua-app`](https://github.com/notactuallytreyanastasio/alloy-lua-app) | `vendor` |
+| `csharp` | [`alloy-csharp`](https://github.com/notactuallytreyanastasio/alloy-csharp) | [`alloy-csharp-app`](https://github.com/notactuallytreyanastasio/alloy-csharp-app) | `TodoApp/vendor` |
 
 Each publish job:
 1. Downloads the `temper.out/` artifact
@@ -296,29 +296,29 @@ This creates a fully automated cascade: **ORM source change** -> **build** -> **
 
 | Repo | Description |
 |------|-------------|
-| [`generic_orm`](https://github.com/notactuallytreyanastasio/generic_orm) | Temper ORM source, CI pipeline, app source code |
+| [`alloy`](https://github.com/notactuallytreyanastasio/alloy) | Temper ORM source, CI pipeline, app source code |
 
 ### Library Repos (Compiled Output)
 
 | Repo | Language | Contents |
 |------|----------|----------|
-| [`generic-orm-js`](https://github.com/notactuallytreyanastasio/generic-orm-js) | JavaScript | ES modules |
-| [`generic-orm-py`](https://github.com/notactuallytreyanastasio/generic-orm-py) | Python | Python 3 modules |
-| [`generic-orm-rust`](https://github.com/notactuallytreyanastasio/generic-orm-rust) | Rust | Cargo crate |
-| [`generic-orm-java`](https://github.com/notactuallytreyanastasio/generic-orm-java) | Java | Java source |
-| [`generic-orm-lua`](https://github.com/notactuallytreyanastasio/generic-orm-lua) | Lua | Lua modules |
-| [`generic-orm-csharp`](https://github.com/notactuallytreyanastasio/generic-orm-csharp) | C# | .NET source |
+| [`alloy-js`](https://github.com/notactuallytreyanastasio/alloy-js) | JavaScript | ES modules |
+| [`alloy-py`](https://github.com/notactuallytreyanastasio/alloy-py) | Python | Python 3 modules |
+| [`alloy-rust`](https://github.com/notactuallytreyanastasio/alloy-rust) | Rust | Cargo crate |
+| [`alloy-java`](https://github.com/notactuallytreyanastasio/alloy-java) | Java | Java source |
+| [`alloy-lua`](https://github.com/notactuallytreyanastasio/alloy-lua) | Lua | Lua modules |
+| [`alloy-csharp`](https://github.com/notactuallytreyanastasio/alloy-csharp) | C# | .NET source |
 
 ### Application Repos (Demo Apps)
 
 | Repo | Language | Framework |
 |------|----------|-----------|
-| [`generic-orm-js-app`](https://github.com/notactuallytreyanastasio/generic-orm-js-app) | JavaScript | Express + EJS |
-| [`generic-orm-py-app`](https://github.com/notactuallytreyanastasio/generic-orm-py-app) | Python | Flask |
-| [`generic-orm-rust-app`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app) | Rust | Axum + askama |
-| [`generic-orm-java-app`](https://github.com/notactuallytreyanastasio/generic-orm-java-app) | Java | Spring Boot |
-| [`generic-orm-lua-app`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app) | Lua | Raw socket HTTP |
-| [`generic-orm-csharp-app`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app) | C# | ASP.NET Core Razor |
+| [`alloy-js-app`](https://github.com/notactuallytreyanastasio/alloy-js-app) | JavaScript | Express + EJS |
+| [`alloy-py-app`](https://github.com/notactuallytreyanastasio/alloy-py-app) | Python | Flask |
+| [`alloy-rust-app`](https://github.com/notactuallytreyanastasio/alloy-rust-app) | Rust | Axum + askama |
+| [`alloy-java-app`](https://github.com/notactuallytreyanastasio/alloy-java-app) | Java | Spring Boot |
+| [`alloy-lua-app`](https://github.com/notactuallytreyanastasio/alloy-lua-app) | Lua | Raw socket HTTP |
+| [`alloy-csharp-app`](https://github.com/notactuallytreyanastasio/alloy-csharp-app) | C# | ASP.NET Core Razor |
 
 ---
 
@@ -407,12 +407,12 @@ Each app repo contains a `SECURITY_ANALYSIS.md` with SQL-specific findings:
 
 | App | Report |
 |-----|--------|
-| JavaScript | [`generic-orm-js-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-js-app/blob/main/SECURITY_ANALYSIS.md) |
-| Python | [`generic-orm-py-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-py-app/blob/main/SECURITY_ANALYSIS.md) |
-| Rust | [`generic-orm-rust-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app/blob/main/SECURITY_ANALYSIS.md) |
-| Java | [`generic-orm-java-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-java-app/blob/main/SECURITY_ANALYSIS.md) |
-| Lua | [`generic-orm-lua-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app/blob/main/SECURITY_ANALYSIS.md) |
-| C# | [`generic-orm-csharp-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app/blob/main/SECURITY_ANALYSIS.md) |
+| JavaScript | [`alloy-js-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/alloy-js-app/blob/main/SECURITY_ANALYSIS.md) |
+| Python | [`alloy-py-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/alloy-py-app/blob/main/SECURITY_ANALYSIS.md) |
+| Rust | [`alloy-rust-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/alloy-rust-app/blob/main/SECURITY_ANALYSIS.md) |
+| Java | [`alloy-java-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/alloy-java-app/blob/main/SECURITY_ANALYSIS.md) |
+| Lua | [`alloy-lua-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/alloy-lua-app/blob/main/SECURITY_ANALYSIS.md) |
+| C# | [`alloy-csharp-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/alloy-csharp-app/blob/main/SECURITY_ANALYSIS.md) |
 
 ### Remediation
 
@@ -621,8 +621,8 @@ cd /tmp/temper
 export PATH="/tmp/temper/cli/build/install/temper/bin:$PATH"
 
 # Clone this repo
-git clone https://github.com/notactuallytreyanastasio/generic_orm.git
-cd generic_orm
+git clone https://github.com/notactuallytreyanastasio/alloy.git
+cd alloy
 
 # Build all 6 backends
 temper build
@@ -707,7 +707,7 @@ dotnet run
 ## Project Structure
 
 ```
-generic_orm/
+alloy/
 ├── config.temper.md              # Library config (defines "orm")
 ├── src/                          # Temper source (literate markdown)
 │   ├── schema.temper.md          # SafeIdentifier, TableDef, FieldDef

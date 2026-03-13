@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generic ORM — Write Once, Secure Everywhere</title>
+<title>Alloy — Write Once, Secure Everywhere</title>
 <style>
   :root {
     --font-sans: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -105,7 +105,7 @@
 
 <nav>
   <div class="inner">
-    <a href="#" class="logo">Generic ORM</a>
+    <a href="#" class="logo">Alloy</a>
     <div class="links">
       <a href="#the-problem">The Problem</a>
       <a href="#the-idea">The Idea</a>
@@ -349,12 +349,12 @@ safeIdentifier("users; DROP") <span class="comment">// bubble (rejected at const
 
     <table>
       <tr><th>Language</th><th>Framework</th><th>Port</th><th>Repository</th></tr>
-      <tr><td>JavaScript</td><td>Express + EJS + better-sqlite3</td><td>5006</td><td><a href="https://github.com/notactuallytreyanastasio/generic-orm-js-app">generic-orm-js-app</a></td></tr>
-      <tr><td>Python</td><td>Flask + sqlite3</td><td>5001</td><td><a href="https://github.com/notactuallytreyanastasio/generic-orm-py-app">generic-orm-py-app</a></td></tr>
-      <tr><td>Rust</td><td>Axum + rusqlite + askama</td><td>5003</td><td><a href="https://github.com/notactuallytreyanastasio/generic-orm-rust-app">generic-orm-rust-app</a></td></tr>
-      <tr><td>Java</td><td>Spring Boot + Thymeleaf + SQLite JDBC</td><td>5004</td><td><a href="https://github.com/notactuallytreyanastasio/generic-orm-java-app">generic-orm-java-app</a></td></tr>
-      <tr><td>Lua</td><td>Raw socket HTTP + lsqlite3</td><td>5005</td><td><a href="https://github.com/notactuallytreyanastasio/generic-orm-lua-app">generic-orm-lua-app</a></td></tr>
-      <tr><td>C#</td><td>ASP.NET Core Razor Pages + SQLite</td><td>5002</td><td><a href="https://github.com/notactuallytreyanastasio/generic-orm-csharp-app">generic-orm-csharp-app</a></td></tr>
+      <tr><td>JavaScript</td><td>Express + EJS + better-sqlite3</td><td>5006</td><td><a href="https://github.com/notactuallytreyanastasio/alloy-js-app">alloy-js-app</a></td></tr>
+      <tr><td>Python</td><td>Flask + sqlite3</td><td>5001</td><td><a href="https://github.com/notactuallytreyanastasio/alloy-py-app">alloy-py-app</a></td></tr>
+      <tr><td>Rust</td><td>Axum + rusqlite + askama</td><td>5003</td><td><a href="https://github.com/notactuallytreyanastasio/alloy-rust-app">alloy-rust-app</a></td></tr>
+      <tr><td>Java</td><td>Spring Boot + Thymeleaf + SQLite JDBC</td><td>5004</td><td><a href="https://github.com/notactuallytreyanastasio/alloy-java-app">alloy-java-app</a></td></tr>
+      <tr><td>Lua</td><td>Raw socket HTTP + lsqlite3</td><td>5005</td><td><a href="https://github.com/notactuallytreyanastasio/alloy-lua-app">alloy-lua-app</a></td></tr>
+      <tr><td>C#</td><td>ASP.NET Core Razor Pages + SQLite</td><td>5002</td><td><a href="https://github.com/notactuallytreyanastasio/alloy-csharp-app">alloy-csharp-app</a></td></tr>
     </table>
 
     <p>The CI pipeline ties it all together. A push to <code>main</code> in the ORM repo triggers a build that compiles all 6 backends, runs the test suite, and pushes the compiled output to 6 library repos. Each library repo cascades an update to its app repo. Source change to deployed update, fully automated.</p>
@@ -413,7 +413,7 @@ safeIdentifier("users; DROP") <span class="comment">// bubble (rejected at const
       <tr><td><a href="plans/">plans/</a></td><td>Implementation plans for 4 major phases &mdash; the thinking before the code</td></tr>
       <tr><td><a href="decks/deck.html">Pitch deck</a></td><td>The full presentation: cross-compilation, defense layers, AI comparison, and the numbers</td></tr>
       <tr><td><a href="decks/deck-enterprise.html">Enterprise deck</a></td><td>Enterprise-focused: AWS SDK scale analysis, maintenance windows, the cost of drift</td></tr>
-      <tr><td><a href="https://github.com/notactuallytreyanastasio/generic_orm">Source code</a></td><td>The ORM itself &mdash; 6 literate markdown files you can read top-to-bottom</td></tr>
+      <tr><td><a href="https://github.com/notactuallytreyanastasio/alloy">Source code</a></td><td>The ORM itself &mdash; 6 literate markdown files you can read top-to-bottom</td></tr>
     </table>
   </div>
 </section>
@@ -421,7 +421,7 @@ safeIdentifier("users; DROP") <span class="comment">// bubble (rejected at const
 <footer>
   <div class="container">
     <p style="margin-bottom: 0.5rem;">
-      <a href="https://github.com/notactuallytreyanastasio/generic_orm">Source</a>
+      <a href="https://github.com/notactuallytreyanastasio/alloy">Source</a>
       &nbsp;&bull;&nbsp;
       <a href="https://github.com/temperlang/temper">Temper</a>
       &nbsp;&bull;&nbsp;
@@ -429,7 +429,7 @@ safeIdentifier("users; DROP") <span class="comment">// bubble (rejected at const
       &nbsp;&bull;&nbsp;
       <a href="decks/deck.html">Deck</a>
     </p>
-    <p>Generic ORM &mdash; Write Once, Secure Everywhere</p>
+    <p>Alloy &mdash; Write Once, Secure Everywhere</p>
   </div>
 </footer>
 

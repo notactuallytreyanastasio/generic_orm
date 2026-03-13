@@ -62,38 +62,38 @@ jobs:
         include:
           - lang: js
             lang_upper: JS
-            repo: generic-orm-js
-            app_repo: generic-orm-js-app
+            repo: alloy-js
+            app_repo: alloy-js-app
             vendor_path: vendor
             full_tree: true
           - lang: py
             lang_upper: PY
-            repo: generic-orm-py
-            app_repo: generic-orm-py-app
+            repo: alloy-py
+            app_repo: alloy-py-app
             vendor_path: vendor
             full_tree: true
           - lang: csharp
             lang_upper: CSHARP
-            repo: generic-orm-csharp
-            app_repo: generic-orm-csharp-app
+            repo: alloy-csharp
+            app_repo: alloy-csharp-app
             vendor_path: TodoApp/vendor
             full_tree: true
           - lang: rust
             lang_upper: RUST
-            repo: generic-orm-rust
-            app_repo: generic-orm-rust-app
+            repo: alloy-rust
+            app_repo: alloy-rust-app
             vendor_path: vendor
             full_tree: true
           - lang: java
             lang_upper: JAVA
-            repo: generic-orm-java
-            app_repo: generic-orm-java-app
+            repo: alloy-java
+            app_repo: alloy-java-app
             vendor_path: vendor
             full_tree: true
           - lang: lua
             lang_upper: LUA
-            repo: generic-orm-lua
-            app_repo: generic-orm-lua-app
+            repo: alloy-lua
+            app_repo: alloy-lua-app
             vendor_path: vendor
             full_tree: true
 
@@ -157,6 +157,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update from generic_temper_orm ${{ github.sha }}"
+            git commit -m "Update from alloy ${{ github.sha }}"
             git push
           fi

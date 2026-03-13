@@ -341,7 +341,7 @@ right_center = SLIDE_W * 3 // 4
 
 for cx, grade, name, lang, subtitle in [
     (left_center - Inches(1.5), "F", "SomeORM", "(Ruby)", "CVSS 9.8"),
-    (right_center - Inches(1.5), "A", "Generic ORM", "(Temper)", "0 injection vulnerabilities"),
+    (right_center - Inches(1.5), "A", "Alloy", "(Temper)", "0 injection vulnerabilities"),
 ]:
     tf = add_textbox(slide, cx, vs_y, Inches(3), Inches(0.8))
     add_para(tf, grade, size=48, color=BLACK, bold=True, align=PP_ALIGN.CENTER)
@@ -357,7 +357,7 @@ tf_vs = add_textbox(slide, SLIDE_W // 2 - Inches(0.3), vs_y + Inches(0.2), Inche
 add_para(tf_vs, "vs", size=20, color=BORDER, align=PP_ALIGN.CENTER)
 
 rows = [
-    ["Metric", "SomeORM (Ruby)", "Generic ORM (Temper)"],
+    ["Metric", "SomeORM (Ruby)", "Alloy (Temper)"],
     ["SQL injection vulnerabilities", "9 critical/high", "0"],
     ["Identifier validation", "None \u2014 direct interpolation", "SafeIdentifier sealed type"],
     ["Value escaping", "Single-quote only", "Typed SqlPart hierarchy (6 types)"],
@@ -637,7 +637,7 @@ p = tf4.paragraphs[0]
 p.alignment = PP_ALIGN.CENTER
 set_run(p, "github.com/temperlang/temper", 11, LIGHT)
 set_run(p, "  \u2022  ", 11, LIGHT)
-set_run(p, "github.com/notactuallytreyanastasio/generic_orm", 11, LIGHT)
+set_run(p, "github.com/notactuallytreyanastasio/alloy", 11, LIGHT)
 
 # ── Save ──
 output_path = "/Users/robertgrayson/code/generic_temper_orm/deck.pptx"

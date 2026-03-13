@@ -1,82 +1,74 @@
 [
   {
-    "hash": "ce6b2aef0309b124d0459474381cacc64f229638",
-    "short_hash": "ce6b2ae",
+    "hash": "a3e645ac9f1d43b0934422951fee472cf792d762",
+    "short_hash": "a3e645a",
     "author": "Robert Grayson",
-    "date": "2026-03-12T21:39:34-04:00",
-    "message": "lets see",
-    "files_changed": 11
+    "date": "2026-03-13T03:08:33-04:00",
+    "message": "Add GitHub Pages project site and fix missing Phase 6 in README\n\nNew docs/index.html tells the project story in 7 chapters: the problem,\nwhy Temper, the 5 defense layers, literate programming, the 3-bug fix\nstory, the AI development comparison, and the 6-app proof. Styled in\nblack-and-white matching the pitch decks.\n\nREADME.md adds missing Phase 6 (Changeset Enrichment) security analysis\nsection between Phase 5 and Phase 7.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 2
   },
   {
-    "hash": "e57869aee785d44eabe641d83aa09078b4de16f4",
-    "short_hash": "e57869a",
+    "hash": "90152f6a5e37e9a4cbedc6a04808e08dce878ea2",
+    "short_hash": "90152f6",
     "author": "Robert Grayson",
-    "date": "2026-03-08T12:03:51-04:00",
-    "message": "Flatten module structure for Temper nightly compatibility\n\n- Add config.temper.md to define \"orm\" library (required by Temper)\n- Move sql/ files into src/ (sql_builder, sql_model, sql_imports, sql_tests)\n  to avoid cross-module @I stage parallelism failures\n- Move test files from test/ into src/ for same-module visibility\n- Remove intra-module import statements (same-module files share scope)\n- Convert when expressions to if-else chains (nightly parser compat)\n- Fix nullable Int32? narrowing with local variable pattern\n- Rename test helper sid->csid in changeset_test to avoid name collision\n\nAll 51 tests pass locally with temper test -b js.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 21
+    "date": "2026-03-13T02:45:28-04:00",
+    "message": "Refocus MITRE CWE analysis to SQL-only scope\n\nRemove non-SQL CWEs (memory safety, XSS, CSRF, auth, etc.) from\ncumulative mapping tables in RESEARCH.md and README.md. The ORM is\na SQL generation library — non-SQL concerns belong to the app layer.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 2
   },
   {
-    "hash": "345137eb7f29562a4296e0e6325b4515171f0ce1",
-    "short_hash": "345137e",
+    "hash": "5f8308f5642bcbab489ad5dc1d2ca4954c67780a",
+    "short_hash": "5f8308f",
     "author": "Robert Grayson",
-    "date": "2026-03-08T11:34:52-04:00",
-    "message": "Remove ### headers inside class bodies for nightly parser compat\n\nThe Temper nightly (0.6.1-dev) parser treats ### markdown headers as\ncode block boundaries, breaking class method continuity and causing\nparse errors like ClassName.if(). Replace all ### headers inside class\nbodies with // inline comments so each class is one continuous block.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "date": "2026-03-13T02:37:14-04:00",
+    "message": "Add Phase 7 MITRE analysis and update docs with schema enrichment features\n\nUpdates README with Phase 7 security analysis table, SqlDefault type docs,\nschema enrichment API section, and 184-test count. Adds Phase 7 section to\nRESEARCH.md with component analysis and 6 CWE findings (all None severity).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 2
+  },
+  {
+    "hash": "278dad44a34c5eee3568d09dbcdf74d388f39826",
+    "short_hash": "278dad4",
+    "author": "Robert Grayson",
+    "date": "2026-03-13T02:23:32-04:00",
+    "message": "Add changeset enrichment (Phase 6) and MITRE security research document\n\nPhase 6: 11 new Changeset methods (putChange, getChange, deleteChange,\nvalidateInclusion, validateExclusion, validateNumber, validateAcceptance,\nvalidateConfirmation, validateContains, validateStartsWith, validateEndsWith),\nNumberValidationOpts class. 34 new tests, all 170 tests pass.\n\nRESEARCH.md: Comprehensive MITRE CWE Top 25 analysis for all phases (1-6)\nwith per-component security assessment tables.\n\nREADME.md: Updated with Phase 3-5 feature docs, security analysis sections\nfor aggregation, set ops, batch UPDATE/DELETE, and extended query features.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
     "files_changed": 5
   },
   {
-    "hash": "68a4a5aa164a544cd634490e1a791fdba0a7c80e",
-    "short_hash": "68a4a5a",
+    "hash": "08eb8b446e0583a1901b33320552ae0e26c8ff07",
+    "short_hash": "08eb8b4",
     "author": "Robert Grayson",
-    "date": "2026-03-08T11:26:28-04:00",
-    "message": "Extract BoolField logic to helper to fix nightly parser\n\nThe temper nightly parser cannot handle multi-line if/else blocks\ninside when arms. Extract the bool-to-SqlBoolean conversion to a\nseparate parseBoolSqlPart() method so the when arm is a single\nexpression call.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 1
+    "date": "2026-03-13T02:06:04-04:00",
+    "message": "Add extended query features: NULLS FIRST/LAST, CROSS JOIN, row locking (Phase 5)\n\n- NullsPosition sealed interface with NullsFirst/NullsLast for ORDER BY control\n- CrossJoin type with nullable onCondition in JoinClause\n- LockMode sealed interface with ForUpdate/ForShare for row-level locking\n- Query constructor grows to 12 params (adds lockMode)\n- 8 new tests, all 136 tests pass\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 2
   },
   {
-    "hash": "551b566215a576798d5a5e29279b2f1001b8c561",
-    "short_hash": "551b566",
+    "hash": "5add6bc450ba1ec212428403b3eb733d0524480a",
+    "short_hash": "5add6bc",
     "author": "Robert Grayson",
-    "date": "2026-03-08T11:23:02-04:00",
-    "message": "Inline secure-composition SQL into ORM source tree\n\nInstead of vendoring all of secure-composition as a separate nested\nproject (which confuses temper's project boundary detection), include\nonly the SQL files (builder, model, imports, tests) directly under\nsrc/sql/. This makes everything one temper project with clean imports.\n\nImport paths updated:\n- src/*.temper.md: ../secure-composition/src/sql/* → ./sql/*\n- test/query_test.temper.md: ../secure-composition/src/sql/* → ../src/sql/*\n\nRemoved the standalone secure-composition/ directory and its\nfile: dependency from package.json.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 36
+    "date": "2026-03-13T02:00:10-04:00",
+    "message": "Add batch UPDATE and DELETE query builders with safety guards\n\nPhase 4 of Ecto feature clone. Adds UpdateQuery and DeleteQuery classes\nwith where/orWhere/limit/set/toSql methods. Both bubble (throw) if no\nWHERE clause is present, preventing accidental full-table mutations.\nFactory functions: update(), deleteFrom(). All 128 tests pass (13 new).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 2
   },
   {
-    "hash": "2b6c38e4c6ab3c37809a8b3dc4c9c828da1ecf78",
-    "short_hash": "2b6c38e",
+    "hash": "554c3ed8f65a96f74226a49df5eabf87d19bd64f",
+    "short_hash": "554c3ed",
     "author": "Robert Grayson",
-    "date": "2026-03-08T11:16:11-04:00",
-    "message": "Use system JDK instead of bundled minimal JRE\n\nThe temper nightly bundles a minimal JRE missing java.desktop module.\nOverride the launcher script to use system JDK 21 (temurin) which has\nall required modules including java.beans.Introspector.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 1
+    "date": "2026-03-13T01:58:30-04:00",
+    "message": "Add set operations (UNION, INTERSECT, EXCEPT) and subqueries\n\nPhase 3 of Ecto feature clone. Adds unionSql, unionAllSql, intersectSql,\nexceptSql free functions, plus subquery, existsSql helpers and\nwhereInSubquery method on Query. All 115 tests pass (10 new).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 2
   },
   {
-    "hash": "52b6488b38aa55a57e73079234dde6c16c8eac3f",
-    "short_hash": "52b6488",
+    "hash": "92ad6c9342a57e0f35b5b68cb5ce8327546c4e08",
+    "short_hash": "92ad6c9",
     "author": "Robert Grayson",
-    "date": "2026-03-08T11:13:42-04:00",
-    "message": "Add JDK 21 setup and inspect temper binary layout\n\nThe nightly temper bundles a minimal JRE missing java.desktop module.\nAdd setup-java with temurin JDK 21 so JAVA_HOME is available. Also\nadd debug output to understand the temper binary structure.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 1
+    "date": "2026-03-13T01:56:46-04:00",
+    "message": "Add aggregation: GROUP BY, HAVING, DISTINCT, selectExpr, aggregate functions\n\nPhase 2 of Ecto feature clone. Adds 6 aggregate free functions (countAll,\ncountCol, sumCol, avgCol, minCol, maxCol), selectExpr for expression-based\nSELECT, GROUP BY, HAVING/orHaving, DISTINCT, and countSql convenience method.\nQuery constructor grows from 7 to 11 params. All 105 tests pass (20 new).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 4
   },
   {
-    "hash": "96628b49a587f7704b44eb89d2bccca3d14dea5a",
-    "short_hash": "96628b4",
+    "hash": "58b5580814cfd60f8da91b565881353f42226c54",
+    "short_hash": "58b5580",
     "author": "Robert Grayson",
-    "date": "2026-03-08T11:11:34-04:00",
-    "message": "Switch CI to Temper nightly (0.6.1-dev)\n\nsecure-composition uses features (@overload, generic interfaces) that\naren't in v0.6.0. The code was developed against a dev build, so use\nthe nightly release which supports these language features.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 1
-  },
-  {
-    "hash": "3033637a58e8fa1bfd3a73fcdb2ea20b96cb32f7",
-    "short_hash": "3033637",
-    "author": "Robert Grayson",
-    "date": "2026-03-08T11:09:01-04:00",
-    "message": "Vendor secure-composition and add CI with Temper v0.6.0\n\n- Vendor secure-composition source directly (private repo, not a submodule)\n- Fix import paths from ../../secure-composition/ to ../secure-composition/\n- Fix package.json file: dependency path for nested layout\n- Add GitHub Actions workflow: downloads Temper v0.6.0 linux binary,\n  builds secure-composition first, then builds and tests the ORM\n- Track temper.keep/ build config for both packages\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
-    "files_changed": 35
-  },
-  {
-    "hash": "328d02d0ff1a314857d2579de5759b43e2bb300e",
-    "short_hash": "328d02d",
-    "author": "Robert Grayson",
-    "date": "2026-03-08T10:46:54-04:00",
-    "message": "initial",
-    "files_changed": 0
+    "date": "2026-03-13T01:45:34-04:00",
+    "message": "Add WHERE clause enrichment: OR, NULL, IN, NOT, BETWEEN, LIKE/ILIKE\n\nPhase 1 of Ecto feature clone. Adds WhereClause sealed interface\n(AndCondition/OrCondition) for mixed AND/OR logic, plus 8 convenience\nmethods: orWhere, whereNull, whereNotNull, whereIn, whereNot,\nwhereBetween, whereLike, whereILike. All 85 tests pass (21 new).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+    "files_changed": 4
   }
 ]
