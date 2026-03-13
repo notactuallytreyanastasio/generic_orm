@@ -1,0 +1,45 @@
+git checkout -b backup/juice-shop-migration-20260313
+rm -rf apps/*/.git
+git clone --bare + restore .git for juice-shop
+=== Git Recovery Log - Fri Mar 13 18:46:16 EDT 2026 ===
+CMD: git clone --bare git@github.com:notactuallytreyanastasio/alloy-js-app.git /tmp/alloy-js-app-bare
+CMD: git clone --bare git@github.com:notactuallytreyanastasio/alloy-py-app.git /tmp/alloy-py-app-bare
+CMD: git clone --bare git@github.com:notactuallytreyanastasio/alloy-rust-app.git /tmp/alloy-rust-app-bare
+CMD: git clone --bare git@github.com:notactuallytreyanastasio/alloy-java-app.git /tmp/alloy-java-app-bare
+CMD: git clone --bare git@github.com:notactuallytreyanastasio/alloy-lua-app.git /tmp/alloy-lua-app-bare
+CMD: git clone --bare git@github.com:notactuallytreyanastasio/alloy-csharp-app.git /tmp/alloy-csharp-app-bare
+CMD: mkdir /Users/robert.grayson1/code/alloy/apps/alloy-js-app/.git && cp -r /tmp/alloy-js-app-bare/* /Users/robert.grayson1/code/alloy/apps/alloy-js-app/.git/
+CMD: cd /Users/robert.grayson1/code/alloy/apps/alloy-js-app && git config core.bare false && git reset HEAD
+CMD: git log --oneline -1
+CMD: mkdir /Users/robert.grayson1/code/alloy/apps/alloy-py-app/.git && cp -r /tmp/alloy-py-app-bare/* /Users/robert.grayson1/code/alloy/apps/alloy-py-app/.git/
+CMD: cd /Users/robert.grayson1/code/alloy/apps/alloy-py-app && git config core.bare false && git reset HEAD
+CMD: git log --oneline -1
+CMD: mkdir /Users/robert.grayson1/code/alloy/apps/alloy-rust-app/.git && cp -r /tmp/alloy-rust-app-bare/* /Users/robert.grayson1/code/alloy/apps/alloy-rust-app/.git/
+CMD: cd /Users/robert.grayson1/code/alloy/apps/alloy-rust-app && git config core.bare false && git reset HEAD
+CMD: git log --oneline -1
+CMD: mkdir /Users/robert.grayson1/code/alloy/apps/alloy-java-app/.git && cp -r /tmp/alloy-java-app-bare/* /Users/robert.grayson1/code/alloy/apps/alloy-java-app/.git/
+CMD: cd /Users/robert.grayson1/code/alloy/apps/alloy-java-app && git config core.bare false && git reset HEAD
+CMD: git log --oneline -1
+CMD: mkdir /Users/robert.grayson1/code/alloy/apps/alloy-lua-app/.git && cp -r /tmp/alloy-lua-app-bare/* /Users/robert.grayson1/code/alloy/apps/alloy-lua-app/.git/
+CMD: cd /Users/robert.grayson1/code/alloy/apps/alloy-lua-app && git config core.bare false && git reset HEAD
+CMD: git log --oneline -1
+CMD: mkdir /Users/robert.grayson1/code/alloy/apps/alloy-csharp-app/.git && cp -r /tmp/alloy-csharp-app-bare/* /Users/robert.grayson1/code/alloy/apps/alloy-csharp-app/.git/
+CMD: cd /Users/robert.grayson1/code/alloy/apps/alloy-csharp-app && git config core.bare false && git reset HEAD
+CMD: git log --oneline -1
+=== Recovery Results ===
+alloy-js-app:     SUCCESS - 45f098e
+alloy-py-app:     SUCCESS - 28783b7
+alloy-rust-app:   SUCCESS - fa0f041
+alloy-java-app:   SUCCESS - e4459e7
+alloy-lua-app:    SUCCESS - 72f82a5
+alloy-csharp-app: SUCCESS - 8f1a5e5
+=== End Recovery Log ===
+submodule add alloy-js-app
+all submodules added
+set juice-shop origin to fork
+staged juice-shop alloy migration files
+committed juice-shop alloy migration
+pushed juice-shop to fork
+committed config + temper.keep
+committed juice-shop submodule update
+committed docs
