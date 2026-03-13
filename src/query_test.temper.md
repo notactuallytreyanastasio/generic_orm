@@ -472,3 +472,75 @@
       let expected = "SELECT orders.status, COUNT(*), SUM(total) FROM orders INNER JOIN users ON orders.user_id = users.id WHERE users.active = TRUE GROUP BY status HAVING COUNT(*) > 3 ORDER BY status ASC";
       assert(q.toSql().toString() == expected) { "full aggregation" };
     }
+
+    // --- Phase 3: Set Operations and Subqueries Tests ---
+
+    test("unionSql") {
+      let a = from(sid("users")).where(sql"role = ${"admin"}");
+      let b = from(sid("users")).where(sql"role = ${"moderator"}");
+      let s = unionSql(a, b).toString();
+      assert(s == "(SELECT * FROM users WHERE role = 'admin') UNION (SELECT * FROM users WHERE role = 'moderator')") { "unionSql: ${s}" };
+    }
+
+    test("unionAllSql") {
+      let a = from(sid("users")).select([sid("name")]);
+      let b = from(sid("contacts")).select([sid("name")]);
+      let s = unionAllSql(a, b).toString();
+      assert(s == "(SELECT name FROM users) UNION ALL (SELECT name FROM contacts)") { "unionAllSql: ${s}" };
+    }
+
+    test("intersectSql") {
+      let a = from(sid("users")).select([sid("email")]);
+      let b = from(sid("subscribers")).select([sid("email")]);
+      let s = intersectSql(a, b).toString();
+      assert(s == "(SELECT email FROM users) INTERSECT (SELECT email FROM subscribers)") { "intersectSql: ${s}" };
+    }
+
+    test("exceptSql") {
+      let a = from(sid("users")).select([sid("id")]);
+      let b = from(sid("banned")).select([sid("id")]);
+      let s = exceptSql(a, b).toString();
+      assert(s == "(SELECT id FROM users) EXCEPT (SELECT id FROM banned)") { "exceptSql: ${s}" };
+    }
+
+    test("subquery with alias") {
+      let inner = from(sid("orders")).select([sid("user_id")]).where(sql"total > ${100}");
+      let s = subquery(inner, sid("big_orders")).toString();
+      assert(s == "(SELECT user_id FROM orders WHERE total > 100) AS big_orders") { "subquery: ${s}" };
+    }
+
+    test("existsSql") {
+      let inner = from(sid("orders")).where(sql"orders.user_id = users.id");
+      let s = existsSql(inner).toString();
+      assert(s == "EXISTS (SELECT * FROM orders WHERE orders.user_id = users.id)") { "existsSql: ${s}" };
+    }
+
+    test("whereInSubquery") {
+      let sub = from(sid("orders")).select([sid("user_id")]).where(sql"total > ${1000}");
+      let q = from(sid("users")).whereInSubquery(sid("id"), sub);
+      let s = q.toSql().toString();
+      assert(s == "SELECT * FROM users WHERE id IN (SELECT user_id FROM orders WHERE total > 1000)") { "whereInSubquery: ${s}" };
+    }
+
+    test("set operation with WHERE on each side") {
+      let a = from(sid("users")).where(sql"age > ${18}").where(sql"active = ${true}");
+      let b = from(sid("users")).where(sql"role = ${"vip"}");
+      let s = unionSql(a, b).toString();
+      assert(s == "(SELECT * FROM users WHERE age > 18 AND active = TRUE) UNION (SELECT * FROM users WHERE role = 'vip')") { "union with where: ${s}" };
+    }
+
+    test("whereInSubquery chained with where") {
+      let sub = from(sid("orders")).select([sid("user_id")]);
+      let q = from(sid("users"))
+        .where(sql"active = ${true}")
+        .whereInSubquery(sid("id"), sub);
+      let s = q.toSql().toString();
+      assert(s == "SELECT * FROM users WHERE active = TRUE AND id IN (SELECT user_id FROM orders)") { "whereInSubquery chained: ${s}" };
+    }
+
+    test("existsSql used in where") {
+      let sub = from(sid("orders")).where(sql"orders.user_id = users.id");
+      let q = from(sid("users")).where(existsSql(sub));
+      let s = q.toSql().toString();
+      assert(s == "SELECT * FROM users WHERE EXISTS (SELECT * FROM orders WHERE orders.user_id = users.id)") { "exists in where: ${s}" };
+    }

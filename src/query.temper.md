@@ -182,6 +182,16 @@ typically done through `from()` and the builder methods.
         this.where(b.accumulated)
       }
 
+      // whereInSubquery: field IN (SELECT ...) for correlated subqueries
+      public whereInSubquery(field: SafeIdentifier, sub: Query): Query {
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" IN (");
+        b.appendFragment(sub.toSql());
+        b.appendSafe(")");
+        this.where(b.accumulated)
+      }
+
       // whereNot: NOT (condition) — Ecto equivalent of `not/1`
       public whereNot(condition: SqlFragment): Query {
         let b = new SqlBuilder();
@@ -507,6 +517,75 @@ names and `SafeIdentifier.sqlValue` for field names.
       let b = new SqlBuilder();
       b.appendSafe("MAX(");
       b.appendSafe(field.sqlValue);
+      b.appendSafe(")");
+      b.accumulated
+    }
+
+## Set Operations
+
+Free functions that combine two queries with SQL set operators. Each wraps
+both queries in parentheses and joins with a hardcoded keyword. The keyword
+is a string literal passed to `appendSafe` — no user input can influence it.
+
+    export let unionSql(a: Query, b: Query): SqlFragment {
+      let sb = new SqlBuilder();
+      sb.appendSafe("(");
+      sb.appendFragment(a.toSql());
+      sb.appendSafe(") UNION (");
+      sb.appendFragment(b.toSql());
+      sb.appendSafe(")");
+      sb.accumulated
+    }
+
+    export let unionAllSql(a: Query, b: Query): SqlFragment {
+      let sb = new SqlBuilder();
+      sb.appendSafe("(");
+      sb.appendFragment(a.toSql());
+      sb.appendSafe(") UNION ALL (");
+      sb.appendFragment(b.toSql());
+      sb.appendSafe(")");
+      sb.accumulated
+    }
+
+    export let intersectSql(a: Query, b: Query): SqlFragment {
+      let sb = new SqlBuilder();
+      sb.appendSafe("(");
+      sb.appendFragment(a.toSql());
+      sb.appendSafe(") INTERSECT (");
+      sb.appendFragment(b.toSql());
+      sb.appendSafe(")");
+      sb.accumulated
+    }
+
+    export let exceptSql(a: Query, b: Query): SqlFragment {
+      let sb = new SqlBuilder();
+      sb.appendSafe("(");
+      sb.appendFragment(a.toSql());
+      sb.appendSafe(") EXCEPT (");
+      sb.appendFragment(b.toSql());
+      sb.appendSafe(")");
+      sb.accumulated
+    }
+
+## Subqueries
+
+Functions for embedding queries as subexpressions. `subquery` wraps a query
+with an alias for use in FROM clauses. `existsSql` wraps a query in EXISTS().
+`whereInSubquery` is a Query method that generates `WHERE field IN (SELECT ...)`.
+
+    export let subquery(q: Query, alias: SafeIdentifier): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("(");
+      b.appendFragment(q.toSql());
+      b.appendSafe(") AS ");
+      b.appendSafe(alias.sqlValue);
+      b.accumulated
+    }
+
+    export let existsSql(q: Query): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("EXISTS (");
+      b.appendFragment(q.toSql());
       b.appendSafe(")");
       b.accumulated
     }
