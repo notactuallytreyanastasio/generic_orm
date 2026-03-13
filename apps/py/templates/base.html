@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Todo Lists{% endblock %} - TodoManager</title>
+  <link rel="stylesheet" href="/retro.css">
+  <style>
+    /* --- App-specific overrides --- */
+    .desktop {
+      padding-top: 32px;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .win95-window {
+      max-width: 600px;
+    }
+
+    /* List items in the sunken panel */
+    .list-row {
+      display: flex;
+      align-items: center;
+      padding: 5px 8px;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: default;
+    }
+    .list-row:last-child {
+      border-bottom: none;
+    }
+    .list-row:hover {
+      background: var(--win95-selection);
+      color: var(--win95-selection-text);
+    }
+    .list-row:hover .list-meta {
+      color: #aaaacc;
+    }
+    .list-row:hover .win95-btn {
+      color: var(--win95-text);
+    }
+    .list-name {
+      flex: 1;
+      font-size: 15px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .list-name:hover {
+      text-decoration: underline;
+    }
+    .list-meta {
+      font-size: 13px;
+      color: var(--win95-btn-shadow);
+      margin-right: 8px;
+    }
+
+    /* Inline form styling */
+    .inline-form {
+      display: none;
+      padding: 6px 8px;
+      background: var(--win95-window-bg);
+      border-bottom: 1px solid var(--win95-btn-shadow);
+    }
+    .inline-form.active {
+      display: block;
+    }
+    .inline-form .form-row {
+      margin-bottom: 4px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 24px;
+      text-align: center;
+      color: var(--win95-btn-shadow);
+      font-size: 15px;
+    }
+
+    /* Edit row replaces the normal row */
+    .edit-row {
+      display: none;
+      padding: 4px 6px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .edit-row.active {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .edit-row .win95-input {
+      flex: 1;
+    }
+
+    /* Confirm delete */
+    .delete-confirm {
+      display: none;
+    }
+    .delete-confirm.active {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .list-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    /* Toolbar input */
+    .win95-toolbar .win95-input {
+      max-width: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mac System 6 Menu Bar -->
+  <div class="mac-menubar">
+    <span class="apple-logo">&#63743;</span>
+    <span class="menu-item app-name">TodoManager</span>
+    <span class="menu-item">File</span>
+    <span class="menu-item">Edit</span>
+    <span class="menu-item">Help</span>
+  </div>
+
+  <!-- Desktop area -->
+  <div class="desktop">
+    {% block content %}{% endblock %}
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

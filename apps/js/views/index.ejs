@@ -1,0 +1,40 @@
+<%- include('header', { pageTitle: 'TodoApp - My Lists' }) %>
+
+    <div class="win95-window">
+      <div class="win95-titlebar">
+        <span class="title-text">My Lists</span>
+        <span class="lang-badge">JS</span>
+        <div class="win95-titlebar-buttons">
+          <button class="win95-titlebar-btn">_</button>
+          <button class="win95-titlebar-btn">&square;</button>
+          <button class="win95-titlebar-btn">X</button>
+        </div>
+      </div>
+      <div class="win95-body">
+        <form action="/lists" method="POST" class="win95-toolbar">
+          <input type="text" name="name" class="win95-input" placeholder="New list name..." required>
+          <button type="submit" class="win95-btn primary">New List</button>
+        </form>
+        <div class="win95-sunken" style="min-height: 200px; margin-top: 8px;">
+          <% if (lists.length === 0) { %>
+            <div class="empty-message">No lists yet. Create one above!</div>
+          <% } else { %>
+            <% lists.forEach(function(l) { %>
+              <div class="list-row">
+                <a href="/lists/<%= l.id %>">&#128193; <%= l.name %></a>
+                <span class="count-badge"><%= l.done_count %>/<%= l.todo_count %> done</span>
+                <form action="/lists/<%= l.id %>/delete" method="POST" style="margin:0" onsubmit="return confirm('Delete this list and all its todos?')">
+                  <button type="submit" class="win95-btn danger" style="min-width:auto;padding:2px 8px;font-size:13px">Del</button>
+                </form>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+      <div class="win95-statusbar">
+        <span class="status-section"><%= lists.length %> list<%= lists.length !== 1 ? 's' : '' %></span>
+        <span class="status-section">Ready</span>
+      </div>
+    </div>
+
+<%- include('footer') %>

@@ -1,0 +1,55 @@
+<%- include('header', { pageTitle: 'TodoApp - ' + list.name }) %>
+
+    <div class="win95-window">
+      <div class="win95-titlebar">
+        <span class="title-text"><%= list.name %></span>
+        <span class="lang-badge">JS</span>
+        <div class="win95-titlebar-buttons">
+          <button class="win95-titlebar-btn">_</button>
+          <button class="win95-titlebar-btn">&square;</button>
+          <button class="win95-titlebar-btn">X</button>
+        </div>
+      </div>
+      <div class="win95-body">
+        <div class="win95-toolbar">
+          <a href="/" class="win95-btn">&laquo; Back</a>
+          <form action="/lists/<%= list.id %>/todos" method="POST" style="display:flex;gap:4px;flex:1;margin:0">
+            <input type="text" name="title" class="win95-input" placeholder="Add a new todo..." required>
+            <button type="submit" class="win95-btn primary">Add</button>
+          </form>
+        </div>
+        <div class="win95-sunken" style="min-height: 250px; margin-top: 8px;">
+          <% if (todos.length === 0) { %>
+            <div class="empty-message">No todos yet. Add one above!</div>
+          <% } else { %>
+            <% todos.forEach(function(t) { %>
+              <div class="todo-item<%= t.completed ? ' completed' : '' %>">
+                <form action="/todos/<%= t.id %>/toggle" method="POST" style="margin:0;display:flex;align-items:center">
+                  <input type="checkbox" class="win95-checkbox"
+                    <%= t.completed ? 'checked' : '' %>
+                    onchange="this.form.submit()" title="Toggle complete">
+                </form>
+                <span class="todo-text todo-text-display" id="text-<%= t.id %>"><%= t.title %></span>
+                <form class="edit-form" id="edit-<%= t.id %>" action="/todos/<%= t.id %>/edit" method="POST">
+                  <input type="text" name="title" class="win95-input" value="<%= t.title %>">
+                  <button type="submit" class="win95-btn">OK</button>
+                  <button type="button" class="win95-btn" onclick="toggleEdit(<%= t.id %>)">X</button>
+                </form>
+                <div class="todo-actions">
+                  <button type="button" class="win95-btn" onclick="toggleEdit(<%= t.id %>)">Edit</button>
+                  <form action="/todos/<%= t.id %>/delete" method="POST" style="margin:0" onsubmit="return confirm('Delete this todo?')">
+                    <button type="submit" class="win95-btn danger">Del</button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+      <div class="win95-statusbar">
+        <span class="status-section"><%= counts.done || 0 %>/<%= counts.total %> completed</span>
+        <span class="status-section"><%= list.name %></span>
+      </div>
+    </div>
+
+<%- include('footer') %>

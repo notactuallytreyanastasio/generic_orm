@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Todo App - {{ list.name }}{% endblock %}
+
+{% block content %}
+<div class="win95-window">
+  <div class="win95-titlebar">
+    <span class="title-text">{{ list.name }}</span>
+    <div class="win95-titlebar-buttons">
+      <button class="win95-titlebar-btn">_</button>
+      <button class="win95-titlebar-btn">&#9633;</button>
+      <button class="win95-titlebar-btn">X</button>
+    </div>
+  </div>
+
+  <div class="win95-toolbar">
+    <a href="/" class="back-link">&laquo; All Lists</a>
+    <form action="/lists/{{ list.id }}/todos" method="post" style="display:flex; gap:4px; flex:1; align-items:center;">
+      <input type="text" name="title" class="win95-input" placeholder="Add a new todo..." required>
+      <button type="submit" class="win95-btn primary">Add</button>
+    </form>
+  </div>
+
+  <div class="win95-body">
+    <div class="win95-sunken" style="min-height: 200px; max-height: 400px;">
+      {% if todos.is_empty() %}
+      <div class="empty-state">
+        No todos yet. Add one above!
+      </div>
+      {% else %}
+        {% for todo in &todos %}
+        <div class="todo-item{% if todo.completed %} completed{% endif %}">
+          <form action="/todos/{{ todo.id }}/toggle" method="post">
+            <input type="checkbox" class="win95-checkbox"
+              {% if todo.completed %}checked{% endif %}
+              onchange="this.form.submit()">
+          </form>
+          <span class="todo-text">{{ todo.title }}</span>
+          <div class="todo-actions">
+            <form action="/todos/{{ todo.id }}/edit" method="post" class="edit-form"
+              style="display:none;" id="edit-{{ todo.id }}">
+              <input type="text" name="title" class="win95-input" value="{{ todo.title }}">
+              <button type="submit" class="win95-btn">Save</button>
+              <button type="button" class="win95-btn"
+                onclick="document.getElementById('edit-{{ todo.id }}').style.display='none'; document.getElementById('show-{{ todo.id }}').style.display='flex';">
+                Cancel
+              </button>
+            </form>
+            <span id="show-{{ todo.id }}" style="display:flex; gap:4px;">
+              <button class="win95-btn"
+                onclick="document.getElementById('edit-{{ todo.id }}').style.display='flex'; document.getElementById('show-{{ todo.id }}').style.display='none';">
+                Edit
+              </button>
+              <form action="/todos/{{ todo.id }}/delete" method="post">
+                <button type="submit" class="win95-btn danger">Del</button>
+              </form>
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="win95-statusbar">
+    <div class="status-section">{{ completed_count }}/{{ todos.len() }} completed</div>
+    <div class="status-section">{{ list.name }}</div>
+  </div>
+</div>
+{% endblock %}

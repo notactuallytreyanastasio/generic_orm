@@ -1,0 +1,20 @@
+{
+    "name": "@temperlang/std",
+    "version": "0.6.0",
+    "author": "Temper Contributors",
+    "description": "Optional support library provided with Temper",
+    "homepage": "https://temperlang.dev/",
+    "license": "Apache-2.0 OR MIT",
+    "type": "module",
+    "exports": {
+        "./json": "./json.js",
+        "./temporal": "./temporal.js",
+        "./testing": "./testing.js",
+        "./net": "./net.js",
+        "./regex": "./regex.js",
+        ".": "./index.js"
+    },
+    "dependencies": {
+        "@temperlang/core": "0.6.0"
+    }
+}

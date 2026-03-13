@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Todo App - My Lists{% endblock %}
+
+{% block content %}
+<div class="win95-window">
+  <div class="win95-titlebar">
+    <span class="title-text">My Todo Lists</span>
+    <div class="win95-titlebar-buttons">
+      <button class="win95-titlebar-btn">_</button>
+      <button class="win95-titlebar-btn">&#9633;</button>
+      <button class="win95-titlebar-btn">X</button>
+    </div>
+  </div>
+
+  <div class="win95-toolbar">
+    <form action="/lists" method="post" style="display:flex; gap:4px; width:100%; align-items:center;">
+      <input type="text" name="name" class="win95-input" placeholder="New list name..." required>
+      <button type="submit" class="win95-btn primary">New List</button>
+    </form>
+  </div>
+
+  <div class="win95-body">
+    <div class="win95-sunken" style="min-height: 200px; max-height: 400px;">
+      {% if lists.is_empty() %}
+      <div class="empty-state">
+        No lists yet. Create one above!
+      </div>
+      {% else %}
+        {% for list in &lists %}
+        <div class="list-card">
+          <a href="/lists/{{ list.id }}">
+            <strong>{{ list.name }}</strong>
+            <span class="list-meta">&mdash; {{ list.todo_count }} item{{ list.todo_count|pluralize }}</span>
+          </a>
+          <div class="todo-actions">
+            <form action="/lists/{{ list.id }}/delete" method="post" onsubmit="return confirm('Delete this list and all its todos?');">
+              <button type="submit" class="win95-btn danger">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="win95-statusbar">
+    <div class="status-section">{{ lists.len() }} list{{ lists.len()|pluralize }}</div>
+    <div class="status-section">Rust/Axum + SQLite</div>
+  </div>
+</div>
+{% endblock %}

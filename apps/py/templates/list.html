@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ list.name }}{% endblock %}
+
+{% block content %}
+<div class="win95-window">
+  <!-- Title bar -->
+  <div class="win95-titlebar">
+    <span class="title-text">{{ list.name }}</span>
+    <div class="win95-titlebar-buttons">
+      <button class="win95-titlebar-btn">_</button>
+      <button class="win95-titlebar-btn">&#9633;</button>
+      <a href="{{ url_for('index') }}" class="win95-titlebar-btn" title="Close"
+         style="text-decoration:none; color:inherit;">X</a>
+    </div>
+  </div>
+
+  <!-- Window body -->
+  <div class="win95-body">
+
+    <!-- Toolbar: Add Todo + Back -->
+    <div class="win95-toolbar">
+      <a href="{{ url_for('index') }}" class="win95-btn">&#9664; Back</a>
+      <button class="win95-btn" onclick="toggleAddForm()">Add Todo</button>
+    </div>
+
+    <!-- Inline add-todo form -->
+    <div class="inline-form" id="add-todo-form">
+      <form method="POST" action="{{ url_for('create_todo', list_id=list.id) }}">
+        <div class="form-row">
+          <label for="new-todo-title">Todo:</label>
+          <input type="text" name="title" id="new-todo-title"
+                 class="win95-input" placeholder="What needs doing..." required>
+          <button type="submit" class="win95-btn primary">OK</button>
+          <button type="button" class="win95-btn" onclick="toggleAddForm()">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Todo items in a sunken panel -->
+    <div class="win95-sunken" style="min-height: 200px; max-height: 380px;">
+      {% if todos %}
+        {% for todo in todos %}
+        <!-- Normal display row -->
+        <div class="todo-item {{ 'completed' if todo.completed }}"
+             id="todo-row-{{ todo.id }}">
+          <form method="POST" action="{{ url_for('toggle_todo', todo_id=todo.id) }}"
+                style="display:inline; margin:0;">
+            <input type="checkbox" class="win95-checkbox"
+                   {{ 'checked' if todo.completed }}
+                   onchange="this.form.submit()">
+          </form>
+          <span class="todo-text">{{ todo.title }}</span>
+          <div class="todo-actions">
+            <button class="win95-btn"
+                    onclick="startEditTodo({{ todo.id }}, '{{ todo.title|replace("'", "\\'")|e }}')"
+                    title="Edit">Edit</button>
+            <button class="win95-btn danger"
+                    onclick="confirmDeleteTodo({{ todo.id }})"
+                    title="Delete">Del</button>
+          </div>
+        </div>
+
+        <!-- Edit row (hidden) -->
+        <div class="edit-row" id="edit-todo-{{ todo.id }}">
+          <form method="POST" action="{{ url_for('edit_todo', todo_id=todo.id) }}"
+                style="display:flex; align-items:center; gap:4px; width:100%;">
+            <input type="text" name="title" class="win95-input"
+                   id="edit-todo-input-{{ todo.id }}" required>
+            <button type="submit" class="win95-btn primary">OK</button>
+            <button type="button" class="win95-btn"
+                    onclick="cancelEditTodo({{ todo.id }})">Cancel</button>
+          </form>
+        </div>
+
+        <!-- Delete confirmation (hidden) -->
+        <div class="edit-row" id="delete-todo-{{ todo.id }}">
+          <span style="flex:1; font-size:14px; color:#cc0000;">
+            Delete "{{ todo.title }}"?
+          </span>
+          <form method="POST" action="{{ url_for('delete_todo', todo_id=todo.id) }}"
+                style="display:inline-flex; gap:4px;">
+            <button type="submit" class="win95-btn danger">Yes</button>
+            <button type="button" class="win95-btn"
+                    onclick="cancelDeleteTodo({{ todo.id }})">No</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          No todos yet. Click "Add Todo" to create one.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Status bar -->
+  <div class="win95-statusbar">
+    <div class="status-section">
+      {{ done }}/{{ total }} completed
+    </div>
+    <div class="status-section">
+      {{ total - done }} remaining
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAddForm() {
+  var form = document.getElementById('add-todo-form');
+  form.classList.toggle('active');
+  if (form.classList.contains('active')) {
+    document.getElementById('new-todo-title').focus();
+  }
+}
+
+function startEditTodo(id, currentTitle) {
+  document.getElementById('todo-row-' + id).style.display = 'none';
+  var editRow = document.getElementById('edit-todo-' + id);
+  editRow.classList.add('active');
+  var input = document.getElementById('edit-todo-input-' + id);
+  input.value = currentTitle;
+  input.focus();
+  input.select();
+}
+
+function cancelEditTodo(id) {
+  document.getElementById('edit-todo-' + id).classList.remove('active');
+  document.getElementById('todo-row-' + id).style.display = '';
+}
+
+function confirmDeleteTodo(id) {
+  document.getElementById('todo-row-' + id).style.display = 'none';
+  document.getElementById('delete-todo-' + id).classList.add('active');
+}
+
+function cancelDeleteTodo(id) {
+  document.getElementById('delete-todo-' + id).classList.remove('active');
+  document.getElementById('todo-row-' + id).style.display = '';
+}
+</script>
+{% endblock %}

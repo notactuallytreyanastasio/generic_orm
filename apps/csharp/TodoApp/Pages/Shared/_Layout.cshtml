@@ -1,0 +1,29 @@
+@{
+    /* Retro Mac + Win95 layout - no bootstrap */
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TodoApp</title>
+    <link rel="stylesheet" href="~/css/retro.css" />
+</head>
+<body>
+    <!-- Mac System 6 Menu Bar -->
+    <div class="mac-menubar">
+        <span class="apple-logo">&#63743;</span>
+        <span class="menu-item app-name">TodoApp</span>
+        <span class="menu-item">File</span>
+        <span class="menu-item">Edit</span>
+        <span class="menu-item">Help</span>
+    </div>
+
+    <!-- Desktop area -->
+    <div class="desktop">
+        @RenderBody()
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

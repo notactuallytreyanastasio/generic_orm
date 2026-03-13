@@ -1,0 +1,5 @@
+require('std/json')
+require('std/temporal')
+require('std/testing')
+require('std/net')
+require('std/regex')

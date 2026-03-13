@@ -1,0 +1,20 @@
+[package]
+name = "temper-std"
+version = "0.6.0"
+license = "Apache-2.0 OR MIT"
+description = "Optional support library provided with Temper"
+homepage = "https://temperlang.dev/"
+repository = "https://github.com/temperlang/temper"
+authors = ["Temper Contributors"]
+edition = "2021"
+rust-version = "1.71.1"
+
+[dependencies]
+temper-core = { path = "../temper-core", version = "=0.6.0" }
+regex = { version = "=1.12.2", optional = true }
+time = { version = "=0.3.41", optional = true }
+ureq = { version = "=3.1.2", optional = true }
+
+[features]
+net = ["ureq"]
+temporal = ["time"]

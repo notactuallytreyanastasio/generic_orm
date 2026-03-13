@@ -1,0 +1,113 @@
+@page "{id:int}"
+@model ListModel
+@{
+    ViewData["Title"] = Model.TodoList?.Name ?? "List";
+}
+
+@if (Model.TodoList == null)
+{
+    <div class="win95-window">
+        <div class="win95-titlebar">
+            <span class="title-text">Error</span>
+            <div class="win95-titlebar-buttons">
+                <button class="win95-titlebar-btn">X</button>
+            </div>
+        </div>
+        <div class="win95-body" style="text-align: center; padding: 24px;">
+            <p>List not found.</p>
+            <a href="/" class="win95-btn" style="text-decoration: none; display: inline-block; margin-top: 8px;">Back to Lists</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="win95-window">
+        <div class="win95-titlebar">
+            <span class="title-text">@Model.TodoList.Name</span>
+            <div class="win95-titlebar-buttons">
+                <button class="win95-titlebar-btn">_</button>
+                <button class="win95-titlebar-btn">[]</button>
+                <button class="win95-titlebar-btn">X</button>
+            </div>
+        </div>
+
+        <div class="win95-body">
+            <!-- Back link + list title toolbar -->
+            <div class="win95-toolbar">
+                <a href="/" class="win95-btn" style="text-decoration: none; min-width: auto;">&lt; Back</a>
+                <span style="flex: 1; font-weight: bold; padding-left: 8px;">@Model.TodoList.Name</span>
+                <span class="lang-badge">C#</span>
+            </div>
+
+            <!-- Add Todo Form -->
+            <form method="post" asp-page-handler="AddTodo">
+                <div class="win95-toolbar" style="border-bottom: none;">
+                    <input type="text" name="Title" class="win95-input" placeholder="Add a new todo..." required />
+                    <button type="submit" class="win95-btn primary">Add</button>
+                </div>
+            </form>
+
+            <!-- Todos Panel -->
+            <div class="win95-sunken" style="min-height: 200px; max-height: 400px;">
+                @if (!Model.TodoList.Todos.Any())
+                {
+                    <div style="padding: 16px; text-align: center; color: var(--win95-btn-shadow);">
+                        No todos yet. Add one above.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var todo in Model.TodoList.Todos)
+                    {
+                        <div class="todo-item @(todo.Completed ? "completed" : "")">
+                            @if (Model.EditingTodoId == todo.Id)
+                            {
+                                <form method="post" asp-page-handler="UpdateTodo" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                    <input type="hidden" name="TodoId" value="@todo.Id" />
+                                    <input type="text" name="Title" value="@todo.Title" class="win95-input" style="flex: 1;" required autofocus />
+                                    <div class="todo-actions">
+                                        <button type="submit" class="win95-btn">Save</button>
+                                        <a href="/List/@Model.TodoList.Id" class="win95-btn" style="text-decoration: none;">Cancel</a>
+                                    </div>
+                                </form>
+                            }
+                            else
+                            {
+                                <!-- Toggle checkbox -->
+                                <form method="post" asp-page-handler="ToggleTodo" style="display: flex; align-items: center;">
+                                    <input type="hidden" name="TodoId" value="@todo.Id" />
+                                    <input type="checkbox" class="win95-checkbox"
+                                           @(todo.Completed ? "checked" : "")
+                                           onchange="this.form.submit()" />
+                                </form>
+
+                                <span class="todo-text">@todo.Title</span>
+
+                                <div class="todo-actions">
+                                    <a href="/List/@Model.TodoList.Id?editTodoId=@todo.Id" class="win95-btn" style="text-decoration: none;">Edit</a>
+                                    <form method="post" asp-page-handler="DeleteTodo" style="display: inline;">
+                                        <input type="hidden" name="TodoId" value="@todo.Id" />
+                                        <button type="submit" class="win95-btn danger"
+                                                onclick="return confirm('Delete this todo?')">Del</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="win95-statusbar">
+            <div class="status-section">
+                @Model.TodoList.Todos.Count @(Model.TodoList.Todos.Count == 1 ? "item" : "items")
+            </div>
+            <div class="status-section">
+                @Model.TodoList.Todos.Count(t => t.Completed) completed
+            </div>
+            <div class="status-section">
+                @Model.TodoList.Todos.Count(t => !t.Completed) remaining
+            </div>
+        </div>
+    </div>
+}

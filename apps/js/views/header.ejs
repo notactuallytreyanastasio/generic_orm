@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'TodoApp' %></title>
+  <link rel="stylesheet" href="/retro.css">
+  <style>
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: default;
+    }
+    .list-row:last-child {
+      border-bottom: none;
+    }
+    .list-row:hover {
+      background: var(--win95-selection);
+      color: var(--win95-selection-text);
+    }
+    .list-row a {
+      flex: 1;
+      text-decoration: none;
+      color: inherit;
+      font-size: 15px;
+    }
+    .list-row .count-badge {
+      font-size: 13px;
+      color: var(--win95-btn-shadow);
+      min-width: 50px;
+      text-align: right;
+    }
+    .list-row:hover .count-badge {
+      color: #aaaacc;
+    }
+    .empty-message {
+      padding: 20px;
+      text-align: center;
+      color: var(--win95-btn-shadow);
+      font-size: 15px;
+    }
+    .edit-form {
+      display: none;
+      flex: 1;
+    }
+    .edit-form.active {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .edit-form .win95-input {
+      flex: 1;
+      padding: 1px 4px;
+      font-size: 14px;
+    }
+    .edit-form .win95-btn {
+      min-width: auto;
+      padding: 1px 8px;
+      font-size: 12px;
+    }
+    .todo-text-display.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Mac System 6 Menu Bar -->
+  <div class="mac-menubar">
+    <span class="apple-logo">&#63743;</span>
+    <span class="menu-item app-name">TodoApp</span>
+    <span class="menu-item">File</span>
+    <span class="menu-item">Edit</span>
+    <span class="menu-item">Help</span>
+  </div>
+
+  <!-- Desktop Area -->
+  <div class="desktop">

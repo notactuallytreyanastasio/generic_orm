@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'TodoApp - ' + ${list.name}">TodoApp - List</title>
+    <link rel="stylesheet" th:href="@{/retro.css}">
+    <style>
+        .edit-form { display: none; }
+        .todo-item:hover .edit-form { display: flex; }
+        .todo-item:hover .todo-display { display: none; }
+        .todo-display { display: flex; align-items: center; gap: 8px; flex: 1; }
+    </style>
+</head>
+<body>
+
+<!-- Mac System 6 Menu Bar -->
+<div class="mac-menubar">
+    <span class="apple-logo">&#63743;</span>
+    <span class="menu-item app-name">TodoApp</span>
+    <span class="menu-item">File</span>
+    <span class="menu-item">Edit</span>
+    <span class="menu-item">Help</span>
+</div>
+
+<!-- Desktop -->
+<div class="desktop">
+    <div class="win95-window">
+        <!-- Title Bar -->
+        <div class="win95-titlebar">
+            <span class="title-text" th:text="${list.name}">List Name</span>
+            <div class="win95-titlebar-buttons">
+                <button class="win95-titlebar-btn">_</button>
+                <button class="win95-titlebar-btn">&#9633;</button>
+                <button class="win95-titlebar-btn">X</button>
+            </div>
+        </div>
+
+        <!-- Toolbar: Back + Add Todo -->
+        <div class="win95-toolbar">
+            <a th:href="@{/}" class="win95-btn" style="text-decoration:none; min-width:auto;">&#8592; Back</a>
+            <form th:action="@{/lists/{id}/todos(id=${list.id})}" method="post"
+                  style="display:flex; gap:4px; flex:1; align-items:center;">
+                <input type="text" name="title" placeholder="New todo..." class="win95-input" required>
+                <button type="submit" class="win95-btn primary">Add</button>
+            </form>
+        </div>
+
+        <!-- Body -->
+        <div class="win95-body">
+            <div class="win95-sunken" style="min-height:200px; max-height:400px;">
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(todos)}" style="padding:20px; text-align:center; color:#808080;">
+                    No todos yet. Add one above!
+                </div>
+
+                <!-- Todo Items -->
+                <div th:each="todo : ${todos}" class="todo-item"
+                     th:classappend="${todo.completed} ? 'completed' : ''">
+
+                    <!-- Normal display -->
+                    <div class="todo-display">
+                        <form th:action="@{/todos/{id}/toggle(id=${todo.id})}" method="post" style="display:inline;">
+                            <input type="checkbox" class="win95-checkbox"
+                                   th:checked="${todo.completed}"
+                                   onchange="this.form.submit();">
+                        </form>
+                        <span class="todo-text" th:text="${todo.title}">Todo text</span>
+                    </div>
+
+                    <!-- Edit form (visible on hover) -->
+                    <div class="edit-form" style="gap:4px; flex:1; align-items:center;">
+                        <form th:action="@{/todos/{id}/toggle(id=${todo.id})}" method="post" style="display:inline;">
+                            <input type="checkbox" class="win95-checkbox"
+                                   th:checked="${todo.completed}"
+                                   onchange="this.form.submit();">
+                        </form>
+                        <form th:action="@{/todos/{id}/edit(id=${todo.id})}" method="post"
+                              style="display:flex; gap:4px; flex:1;">
+                            <input type="text" name="title" th:value="${todo.title}" class="win95-input" required>
+                            <button type="submit" class="win95-btn" style="min-width:auto;">Save</button>
+                        </form>
+                        <form th:action="@{/todos/{id}/delete(id=${todo.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="win95-btn danger" style="min-width:auto;">Del</button>
+                        </form>
+                    </div>
+
+                    <!-- Actions (always visible) -->
+                    <div class="todo-actions" style="display:none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="win95-statusbar">
+            <div class="status-section">
+                <span th:text="${#lists.size(todos)} + ' todo(s)'">0 todo(s)</span>
+            </div>
+            <div class="status-section">
+                <span th:text="${list.completedCount} + ' completed'">0 completed</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

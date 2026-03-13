@@ -1,0 +1,523 @@
+/* ==========================================================================
+   Retro Mac OS (System 6/7) + Windows 95 Hybrid Theme
+   Background & chrome: Mac System 6 (1988)
+   Windows & controls: Windows 95 (1995)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* --- Mac OS System 6 Desktop --- */
+:root {
+  --mac-bg: #a8a8a8;
+  --mac-menu-bg: #ffffff;
+  --mac-menu-border: #000000;
+  --mac-pattern: #888888;
+
+  /* Windows 95 palette */
+  --win95-bg: #c0c0c0;
+  --win95-title: #000080;
+  --win95-title-text: #ffffff;
+  --win95-title-inactive: #808080;
+  --win95-btn-face: #c0c0c0;
+  --win95-btn-highlight: #ffffff;
+  --win95-btn-shadow: #808080;
+  --win95-btn-dark-shadow: #000000;
+  --win95-window-bg: #c0c0c0;
+  --win95-field-bg: #ffffff;
+  --win95-text: #000000;
+  --win95-selection: #000080;
+  --win95-selection-text: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'VT323', 'Chicago', 'Geneva', 'Helvetica', monospace;
+  font-size: 16px;
+  color: var(--win95-text);
+  background-color: var(--mac-bg);
+  /* Mac System 6 desktop pattern */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.06) 1px,
+      rgba(0,0,0,0.06) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.06) 1px,
+      rgba(0,0,0,0.06) 2px
+    );
+}
+
+/* --- Mac System 6 Menu Bar --- */
+.mac-menubar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: var(--mac-menu-bg);
+  border-bottom: 2px solid var(--mac-menu-border);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  z-index: 9999;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.mac-menubar .apple-logo {
+  font-size: 16px;
+  margin-right: 16px;
+  cursor: default;
+}
+
+.mac-menubar .menu-item {
+  padding: 2px 12px;
+  cursor: default;
+  user-select: none;
+}
+
+.mac-menubar .menu-item:hover {
+  background: var(--mac-menu-border);
+  color: var(--mac-menu-bg);
+}
+
+.mac-menubar .menu-item.app-name {
+  font-weight: bold;
+}
+
+/* --- Main Content Area (below menu bar) --- */
+.desktop {
+  padding-top: 30px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-bottom: 20px;
+}
+
+/* --- Windows 95 Window --- */
+.win95-window {
+  background: var(--win95-window-bg);
+  border: 2px solid;
+  border-color: var(--win95-btn-highlight) var(--win95-btn-dark-shadow) var(--win95-btn-dark-shadow) var(--win95-btn-highlight);
+  box-shadow: inset 1px 1px 0 var(--win95-btn-face), inset -1px -1px 0 var(--win95-btn-shadow);
+  margin: 10px;
+  min-width: 480px;
+  max-width: 640px;
+  width: 100%;
+}
+
+/* --- Title Bar --- */
+.win95-titlebar {
+  background: var(--win95-title);
+  color: var(--win95-title-text);
+  padding: 3px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: bold;
+  user-select: none;
+  height: 22px;
+}
+
+.win95-titlebar .title-text {
+  flex: 1;
+  padding-left: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.win95-titlebar-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.win95-titlebar-btn {
+  width: 16px;
+  height: 14px;
+  background: var(--win95-btn-face);
+  border: 1px solid;
+  border-color: var(--win95-btn-highlight) var(--win95-btn-dark-shadow) var(--win95-btn-dark-shadow) var(--win95-btn-highlight);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--win95-text);
+  cursor: default;
+  line-height: 1;
+  padding: 0;
+  font-family: 'Marlett', sans-serif;
+}
+
+.win95-titlebar-btn:active {
+  border-color: var(--win95-btn-dark-shadow) var(--win95-btn-highlight) var(--win95-btn-highlight) var(--win95-btn-dark-shadow);
+}
+
+/* --- Window Body --- */
+.win95-body {
+  padding: 8px;
+}
+
+/* --- Menu Bar inside window --- */
+.win95-menubar {
+  display: flex;
+  background: var(--win95-window-bg);
+  padding: 2px 0;
+  border-bottom: 1px solid var(--win95-btn-shadow);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.win95-menubar .menu-item {
+  padding: 2px 8px;
+  cursor: default;
+}
+
+.win95-menubar .menu-item:hover {
+  background: var(--win95-selection);
+  color: var(--win95-selection-text);
+}
+
+/* --- Status Bar --- */
+.win95-statusbar {
+  border-top: 1px solid var(--win95-btn-shadow);
+  padding: 3px 6px;
+  font-size: 13px;
+  color: var(--win95-text);
+  display: flex;
+  gap: 8px;
+}
+
+.win95-statusbar .status-section {
+  border: 1px solid;
+  border-color: var(--win95-btn-shadow) var(--win95-btn-highlight) var(--win95-btn-highlight) var(--win95-btn-shadow);
+  padding: 1px 6px;
+  flex: 1;
+}
+
+/* --- Win95 Buttons --- */
+.win95-btn {
+  font-family: 'VT323', 'Chicago', monospace;
+  font-size: 15px;
+  padding: 4px 16px;
+  background: var(--win95-btn-face);
+  border: 2px solid;
+  border-color: var(--win95-btn-highlight) var(--win95-btn-dark-shadow) var(--win95-btn-dark-shadow) var(--win95-btn-highlight);
+  box-shadow: inset 1px 1px 0 var(--win95-btn-face), inset -1px -1px 0 var(--win95-btn-shadow);
+  cursor: pointer;
+  color: var(--win95-text);
+  min-width: 75px;
+  text-align: center;
+}
+
+.win95-btn:active {
+  border-color: var(--win95-btn-dark-shadow) var(--win95-btn-highlight) var(--win95-btn-highlight) var(--win95-btn-dark-shadow);
+  box-shadow: inset 1px 1px 0 var(--win95-btn-shadow);
+  padding: 5px 15px 3px 17px;
+}
+
+.win95-btn:focus {
+  outline: 1px dotted var(--win95-text);
+  outline-offset: -4px;
+}
+
+.win95-btn.primary {
+  border: 3px solid var(--win95-btn-dark-shadow);
+  padding: 3px 14px;
+}
+
+.win95-btn.danger {
+  color: #cc0000;
+}
+
+/* --- Form Controls --- */
+.win95-input, .win95-select, .win95-textarea {
+  font-family: 'VT323', 'Chicago', monospace;
+  font-size: 15px;
+  padding: 3px 4px;
+  background: var(--win95-field-bg);
+  border: 2px solid;
+  border-color: var(--win95-btn-shadow) var(--win95-btn-highlight) var(--win95-btn-highlight) var(--win95-btn-shadow);
+  box-shadow: inset 1px 1px 0 var(--win95-btn-dark-shadow);
+  color: var(--win95-text);
+  width: 100%;
+}
+
+.win95-input:focus, .win95-select:focus, .win95-textarea:focus {
+  outline: none;
+}
+
+.win95-checkbox {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  background: var(--win95-field-bg);
+  border: 2px solid;
+  border-color: var(--win95-btn-shadow) var(--win95-btn-highlight) var(--win95-btn-highlight) var(--win95-btn-shadow);
+  box-shadow: inset 1px 1px 0 var(--win95-btn-dark-shadow);
+  vertical-align: middle;
+  cursor: pointer;
+  position: relative;
+}
+
+.win95-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -3px;
+  left: 1px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+label {
+  font-size: 15px;
+  cursor: default;
+}
+
+/* --- Sunken Panel (list area) --- */
+.win95-sunken {
+  border: 2px solid;
+  border-color: var(--win95-btn-shadow) var(--win95-btn-highlight) var(--win95-btn-highlight) var(--win95-btn-shadow);
+  box-shadow: inset 1px 1px 0 var(--win95-btn-dark-shadow);
+  background: var(--win95-field-bg);
+  padding: 4px;
+  overflow-y: auto;
+}
+
+/* --- Group Box --- */
+.win95-groupbox {
+  border: 1px solid var(--win95-btn-shadow);
+  border-top: 1px solid var(--win95-btn-highlight);
+  margin: 8px 0;
+  padding: 12px 8px 8px;
+  position: relative;
+}
+
+.win95-groupbox legend {
+  background: var(--win95-window-bg);
+  padding: 0 4px;
+  font-size: 14px;
+}
+
+/* --- Tab Control --- */
+.win95-tabs {
+  display: flex;
+  border-bottom: none;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 1;
+}
+
+.win95-tab {
+  font-family: 'VT323', 'Chicago', monospace;
+  font-size: 15px;
+  padding: 4px 16px;
+  background: var(--win95-btn-face);
+  border: 1px solid;
+  border-color: var(--win95-btn-highlight) var(--win95-btn-shadow) transparent var(--win95-btn-shadow);
+  cursor: pointer;
+  position: relative;
+  top: 1px;
+  color: var(--win95-text);
+}
+
+.win95-tab.active {
+  background: var(--win95-window-bg);
+  border-bottom-color: var(--win95-window-bg);
+  z-index: 2;
+  padding-bottom: 5px;
+}
+
+.win95-tab-content {
+  border: 1px solid var(--win95-btn-shadow);
+  padding: 12px;
+  background: var(--win95-window-bg);
+}
+
+/* --- Todo List Specific Styles --- */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: default;
+}
+
+.todo-item:last-child {
+  border-bottom: none;
+}
+
+.todo-item:hover {
+  background: var(--win95-selection);
+  color: var(--win95-selection-text);
+}
+
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  color: var(--win95-btn-shadow);
+}
+
+.todo-item:hover.completed .todo-text {
+  color: #aaaacc;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 15px;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.todo-actions .win95-btn {
+  min-width: auto;
+  padding: 2px 8px;
+  font-size: 13px;
+}
+
+/* --- Form Layout --- */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.form-row label {
+  min-width: 60px;
+  text-align: right;
+}
+
+.form-row .win95-input,
+.form-row .win95-select {
+  flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--win95-btn-shadow);
+}
+
+/* --- List Sidebar --- */
+.app-layout {
+  display: flex;
+  gap: 0;
+  height: 400px;
+}
+
+.list-sidebar {
+  width: 160px;
+  border-right: 1px solid var(--win95-btn-shadow);
+}
+
+.list-sidebar .list-item {
+  padding: 4px 8px;
+  cursor: default;
+  font-size: 14px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.list-sidebar .list-item:hover,
+.list-sidebar .list-item.active {
+  background: var(--win95-selection);
+  color: var(--win95-selection-text);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Toolbar --- */
+.win95-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-bottom: 1px solid var(--win95-btn-shadow);
+  align-items: center;
+}
+
+.win95-toolbar .win95-input {
+  flex: 1;
+}
+
+/* --- Scrollbar (webkit) --- */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background:
+    repeating-conic-gradient(var(--win95-btn-face) 0% 25%, var(--win95-field-bg) 0% 50%)
+    50% / 2px 2px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--win95-btn-face);
+  border: 2px solid;
+  border-color: var(--win95-btn-highlight) var(--win95-btn-dark-shadow) var(--win95-btn-dark-shadow) var(--win95-btn-highlight);
+}
+
+::-webkit-scrollbar-button {
+  background: var(--win95-btn-face);
+  border: 1px solid;
+  border-color: var(--win95-btn-highlight) var(--win95-btn-dark-shadow) var(--win95-btn-dark-shadow) var(--win95-btn-highlight);
+  display: block;
+  height: 16px;
+  width: 16px;
+}
+
+/* --- Dialog Overlay --- */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.dialog-overlay .win95-window {
+  min-width: 300px;
+  max-width: 400px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+/* --- Language badge --- */
+.lang-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 12px;
+  border: 1px solid var(--win95-btn-shadow);
+  background: var(--win95-field-bg);
+  margin-left: 8px;
+  vertical-align: middle;
+}

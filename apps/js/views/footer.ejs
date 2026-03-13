@@ -1,0 +1,20 @@
+  </div><!-- /.desktop -->
+
+  <script>
+    function toggleEdit(todoId) {
+      var textEl = document.getElementById('text-' + todoId);
+      var formEl = document.getElementById('edit-' + todoId);
+      var inputEl = formEl.querySelector('input[name="title"]');
+      if (formEl.classList.contains('active')) {
+        formEl.classList.remove('active');
+        textEl.classList.remove('hidden');
+      } else {
+        formEl.classList.add('active');
+        textEl.classList.add('hidden');
+        inputEl.focus();
+        inputEl.select();
+      }
+    }
+  </script>
+</body>
+</html>
