@@ -56,47 +56,38 @@
   <line x1="500" y1="240" x2="700" y2="240" stroke="#94a3b8" stroke-width="2"/>
 
   <!-- Subtitle -->
-  <text x="600" y="290" text-anchor="middle" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#64748b" letter-spacing="1">Write Once, Secure Everywhere</text>
+  <text x="600" y="290" text-anchor="middle" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#64748b" letter-spacing="1">Write Once, Secure SQL Everywhere</text>
 
   <!-- Description -->
-  <text x="600" y="345" text-anchor="middle" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#94a3b8">Type-safe SQL ORM compiled to 6 languages from a single source</text>
+  <text x="600" y="345" text-anchor="middle" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#94a3b8">A SQL ORM written once in Temper, compiled to six languages</text>
 
   <!-- Language pills -->
   <g transform="translate(600, 400)" text-anchor="middle">
+    <!-- Total width: 433 (pills) + 75 (5 gaps * 15) = 508. Centered: start at -254 -->
     <!-- JS -->
-    <rect x="-365" y="-18" width="100" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="-315" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">JavaScript</text>
+    <rect x="-254" y="-18" width="100" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="-204" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">JavaScript</text>
     <!-- Python -->
-    <rect x="-245" y="-18" width="85" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="-202" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Python</text>
+    <rect x="-139" y="-18" width="85" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="-96" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Python</text>
     <!-- Rust -->
-    <rect x="-140" y="-18" width="68" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="-106" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Rust</text>
+    <rect x="-39" y="-18" width="68" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="-5" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Rust</text>
     <!-- Java -->
-    <rect x="-52" y="-18" width="68" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="-18" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Java</text>
+    <rect x="44" y="-18" width="68" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="78" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Java</text>
     <!-- Lua -->
-    <rect x="36" y="-18" width="60" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="66" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Lua</text>
+    <rect x="127" y="-18" width="60" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="157" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">Lua</text>
     <!-- C# -->
-    <rect x="116" y="-18" width="52" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="142" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">C#</text>
+    <rect x="202" y="-18" width="52" height="36" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="228" y="7" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5" text-anchor="middle">C#</text>
   </g>
 
   <!-- Stats row -->
   <g transform="translate(600, 500)" text-anchor="middle">
-    <text x="-200" y="0" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="42" font-weight="800" fill="#1e293b">184</text>
-    <text x="-200" y="25" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#94a3b8" letter-spacing="1.5">TESTS</text>
-
-    <line x1="-100" y1="-20" x2="-100" y2="30" stroke="#cbd5e1" stroke-width="1"/>
-
     <text x="0" y="0" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="42" font-weight="800" fill="#1e293b">6</text>
     <text x="0" y="25" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#94a3b8" letter-spacing="1.5">LANGUAGES</text>
-
-    <line x1="100" y1="-20" x2="100" y2="30" stroke="#cbd5e1" stroke-width="1"/>
-
-    <text x="200" y="0" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="42" font-weight="800" fill="#1e293b">0</text>
-    <text x="200" y="25" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#94a3b8" letter-spacing="1.5">VULNERABILITIES</text>
   </g>
 
   <!-- Bottom accent bar -->
