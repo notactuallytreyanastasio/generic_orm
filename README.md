@@ -76,7 +76,9 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 ┌─────────────────────────────────────────────────────────┐
 │  safeIdentifier("users")  →  SafeIdentifier             │
 │                                                         │
-│  TableDef(safeId, [FieldDef(safeId, StringField, false)])│
+│  TableDef(safeId, fields, primaryKey?)                    │
+│  FieldDef(safeId, StringField, nullable, default?, virt) │
+│  timestamps() → [inserted_at, updated_at] with DEFAULT   │
 │                                                         │
 │  from(safeId)                                           │
 │    .where(sqlFragment)                                  │
@@ -123,18 +125,20 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 
 **Changeset data manipulation:** `putChange`, `getChange`, `deleteChange`
 
+**Schema enrichment:** `TableDef.primaryKey` (custom PK column), `FieldDef.defaultValue` (`SqlDefault` for DB defaults), `FieldDef.virtual` (excluded from SQL), `timestamps()` (inserted_at/updated_at with DEFAULT)
+
 ### Source Files
 
 All source lives in [`src/`](src/) as Temper literate markdown (`.temper.md`):
 
 | File | Purpose |
 |------|---------|
-| [`schema.temper.md`](src/schema.temper.md) | `SafeIdentifier`, `FieldType`, `FieldDef`, `TableDef` |
+| [`schema.temper.md`](src/schema.temper.md) | `SafeIdentifier`, `FieldType`, `FieldDef` (defaultValue, virtual), `TableDef` (primaryKey), `timestamps()` |
 | [`query.temper.md`](src/query.temper.md) | `Query`, `from()`, `WhereClause`, `JoinType` (5 variants), `OrderClause`, `NullsPosition`, `LockMode`, `UpdateQuery`, `DeleteQuery`, set operations, subqueries, aggregates |
 | [`changeset.temper.md`](src/changeset.temper.md) | `Changeset`, `changeset()`, cast/validate/SQL pipeline |
 | [`orm.temper.md`](src/orm.temper.md) | `deleteSql()` top-level helper |
 | [`sql_builder.temper.md`](src/sql_builder.temper.md) | `SqlBuilder`, `sql` tag |
-| [`sql_model.temper.md`](src/sql_model.temper.md) | `SqlFragment`, `SqlPart`, `SqlString`, `SqlInt32`, etc. |
+| [`sql_model.temper.md`](src/sql_model.temper.md) | `SqlFragment`, `SqlPart`, `SqlString`, `SqlInt32`, `SqlDefault`, etc. |
 | [`sql_imports.temper.md`](src/sql_imports.temper.md) | Re-exports from vendored `secure-composition` |
 | [`schema_test.temper.md`](src/schema_test.temper.md) | Schema tests |
 | [`query_test.temper.md`](src/query_test.temper.md) | Query builder tests |
@@ -345,6 +349,7 @@ User values never touch `appendSafe`. Each type gets its own [`SqlPart`](src/sql
 | `SqlBoolean` | Literal `TRUE` / `FALSE` | `TRUE` |
 | `SqlFloat64` | Bare float via `.toString()` | `3.14` |
 | `SqlDate` | Quote-wrapped date string | `'2026-03-12'` |
+| `SqlDefault` | Literal `DEFAULT` keyword | `DEFAULT` |
 
 The `SqlPart` interface is **sealed** — the compiler enforces exhaustive handling. Adding a new type without updating the rendering logic is a compile error.
 
@@ -484,7 +489,7 @@ Three of the four ORM-level findings were fixed in the Temper source, rebuilt ac
 - `SqlFloat64 negative Infinity renders as NULL`
 - `SqlFloat64 normal values still work`
 
-All 170 tests pass across the full suite.
+All 184 tests pass across the full suite.
 
 #### Summary
 
@@ -597,6 +602,17 @@ Set operation keywords (`UNION`, `UNION ALL`, `INTERSECT`, `EXCEPT`) are hardcod
 | `CrossJoin.keyword()` | Sealed interface -- hardcoded `"CROSS JOIN"` | None |
 | Nullable `onCondition` | When null, ON clause omitted entirely | None |
 | `LockMode.keyword()` | Sealed interface -- 2 hardcoded strings | None |
+
+### Schema Enrichment Security Analysis (Phase 7)
+
+| Component | Type Safety Mechanism | Risk |
+|-----------|----------------------|------|
+| `TableDef.primaryKey` | `SafeIdentifier?` -- validated at construction | None |
+| `pkName()` | Returns `SafeIdentifier.sqlValue` or hardcoded `"id"` | None |
+| `FieldDef.defaultValue` | `SqlPart?` -- type-dispatched rendering | None |
+| `SqlDefault` | Renders hardcoded `"DEFAULT"` string | None |
+| `FieldDef.virtual` | Boolean flag -- virtual fields excluded from SQL entirely | **Reduces attack surface** |
+| `timestamps()` | Hardcoded field names via `safeIdentifier()` + `SqlDefault` | None |
 
 ### Full Security Research
 

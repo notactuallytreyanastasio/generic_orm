@@ -10,6 +10,7 @@ Systematic security assessment of the Temper ORM against the [MITRE CWE Top 25 (
 - [Phase 4: Batch UPDATE and DELETE](#phase-4-batch-update-and-delete)
 - [Phase 5: Extended Query Features](#phase-5-extended-query-features)
 - [Phase 6: Changeset Enrichment](#phase-6-changeset-enrichment)
+- [Phase 7: Schema Enrichment](#phase-7-schema-enrichment)
 - [Cumulative CWE Mapping](#cumulative-cwe-mapping)
 
 ---
@@ -221,15 +222,53 @@ Systematic security assessment of the Temper ORM against the [MITRE CWE Top 25 (
 
 ---
 
+## Phase 7: Schema Enrichment
+
+### Components Analyzed
+
+| Component | Type Safety Mechanism | Injection Risk |
+|-----------|----------------------|----------------|
+| `TableDef.primaryKey` | `SafeIdentifier?` -- sealed, non-exported implementation | None |
+| `pkName()` | Returns `SafeIdentifier.sqlValue` or hardcoded `"id"` | None |
+| `FieldDef.defaultValue` | `SqlPart?` -- sealed interface, type-dispatched rendering | None |
+| `SqlDefault.formatTo()` | Hardcoded `"DEFAULT"` string literal | None |
+| `FieldDef.virtual` | Boolean flag -- virtual fields excluded from SQL entirely | None (reduces surface) |
+| `timestamps()` | Hardcoded field names via `safeIdentifier()` + `SqlDefault` values | None |
+| `toInsertSql()` virtual skip | `if (f.virtual) { continue; }` in three loops | None (reduces surface) |
+| `toUpdateSql()` custom PK | `appendSafe(_tableDef.pkName())` -- validated or hardcoded | None |
+| `deleteSql()` custom PK | `appendSafe(tableDef.pkName())` -- validated or hardcoded | None |
+
+### Key Properties
+
+- **Primary key names flow through SafeIdentifier**: `TableDef.primaryKey` is `SafeIdentifier?`, meaning custom PK names must pass `safeIdentifier()` validation at construction time. When null, `pkName()` returns the hardcoded `"id"`.
+- **SqlDefault is a zero-input constant**: `formatTo()` appends the literal string `"DEFAULT"` -- no user data, interpolation, or runtime computation involved.
+- **Virtual field exclusion shrinks attack surface**: Fields with `virtual == true` are skipped in INSERT column/value lists, UPDATE SET clauses, and non-nullable field checks.
+- **Default values use sealed SqlPart pipeline**: `FieldDef.defaultValue` is typed as `SqlPart?`, flowing through the same type-safe rendering pipeline as all other values. Set at schema-definition time, not from user input.
+- **timestamps() validates hardcoded names**: Even though `"inserted_at"` and `"updated_at"` are constants, they pass through `safeIdentifier()` for defense-in-depth.
+- **Nullable narrowing correct throughout**: `pkName()` assigns `primaryKey` to local `pk` before null check. `toInsertSql()` assigns `f.defaultValue` to local `dv` before null check. Both follow the Temper idiom for nullable narrowing.
+
+### Findings
+
+| # | Severity | CWE | Finding |
+|---|----------|-----|---------|
+| P7-1 | None | CWE-89 | Primary key column names via `SafeIdentifier?` -- validated at construction or hardcoded `"id"`. No injection vector. |
+| P7-2 | None | CWE-89 | `SqlDefault` renders hardcoded `"DEFAULT"` -- zero user-input surface. |
+| P7-3 | None | CWE-89 | Default values flow through sealed `SqlPart` pipeline with per-type escaping. Set at schema time, not from user input. |
+| P7-4 | None | CWE-20 | Custom PK names must pass `safeIdentifier()`. Empty strings bubble. SQL metacharacters rejected. |
+| P7-5 | None | CWE-476 | All nullable fields (`primaryKey`, `defaultValue`) use local-variable narrowing. Temper enforces null checks at compile time. |
+| P7-6 | None | CWE-125 | All array accesses in `toInsertSql`/`toUpdateSql` are loop-bounded. `valParts[0]` guarded by `length == 0` check. |
+
+---
+
 ## Cumulative CWE Mapping
 
-Updated assessment across all phases (Phases 1-6):
+Updated assessment across all phases (Phases 1-7):
 
 | Rank | CWE | Name | Status | Phase Impact |
 |------|-----|------|--------|-------------|
 | 1 | CWE-787 | Out-of-bounds Write | N/A | No change |
 | 2 | CWE-79 | XSS | N/A | No change |
-| 3 | CWE-89 | SQL Injection | **Mitigated** | Phases 1-5 add sealed interfaces with hardcoded keywords. Phase 6 adds no SQL paths. |
+| 3 | CWE-89 | SQL Injection | **Mitigated** | Phases 1-5 add sealed interfaces with hardcoded keywords. Phase 6 adds no SQL paths. Phase 7 adds SqlDefault (hardcoded), PK via SafeIdentifier. |
 | 4 | CWE-416 | Use After Free | N/A | No change |
 | 5 | CWE-78 | OS Command Injection | N/A | No change |
 | 6 | CWE-20 | Improper Input Validation | **Mitigated** | Phase 6 adds numeric range validation. All phases require SafeIdentifier. |
@@ -238,7 +277,7 @@ Updated assessment across all phases (Phases 1-6):
 | 9 | CWE-352 | CSRF | N/A | No change |
 | 10 | CWE-434 | File Upload | N/A | No change |
 | 11 | CWE-862 | Missing Authorization | N/A | No change |
-| 12 | CWE-476 | NULL Pointer Deref | **Partial** | Phase 5 adds 3 new nullable fields, all using correct narrowing. |
+| 12 | CWE-476 | NULL Pointer Deref | **Partial** | Phase 5 adds 3 new nullable fields. Phase 7 adds 2 more (primaryKey, defaultValue). All use correct narrowing. |
 | 13 | CWE-287 | Improper Authentication | N/A | No change |
 | 14 | CWE-190 | Integer Overflow | **Partial** | Phase 4 rejects negative limit. No upper bound (ORM-6). |
 | 15 | CWE-502 | Deserialization | N/A | No change |
@@ -256,7 +295,7 @@ Updated assessment across all phases (Phases 1-6):
 | -- | CWE-915 | Mass Assignment | **Mitigated** | Sealed Changeset preserved through Phase 6. |
 | -- | CWE-284 | Access Control | **Mitigated** | Phase 4 adds no-WHERE guards for UPDATE/DELETE. |
 
-**Summary:** 5 Mitigated, 2 Partial, 19 N/A. No Vulnerable ratings at the ORM level.
+**Summary:** 5 Mitigated, 2 Partial, 19 N/A. No Vulnerable ratings at the ORM level. Phase 7 introduces no new vulnerabilities.
 
 ## Test Coverage
 
@@ -269,3 +308,4 @@ Updated assessment across all phases (Phases 1-6):
 | Phase 4 | 13 | 128 | Batch UPDATE/DELETE with no-WHERE guards |
 | Phase 5 | 8 | 136 | NULLS FIRST/LAST, CROSS JOIN, row locking |
 | Phase 6 | 34 | 170 | Changeset data manipulation and validation |
+| Phase 7 | 14 | 184 | Schema enrichment: primaryKey, defaults, virtual, timestamps |
