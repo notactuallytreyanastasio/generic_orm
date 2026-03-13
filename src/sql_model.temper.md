@@ -121,6 +121,20 @@ needing escaped and/or represented properly for a particular DB dialect.
 
     }
 
+## SqlDefault
+
+`SqlDefault` renders the literal SQL keyword `DEFAULT`, used for columns
+with server-side default values (e.g., `NOW()` for timestamps).
+
+    export class SqlDefault() extends SqlPart {
+
+      // formatTo
+      public formatTo(builder: StringBuilder): Void {
+        builder.append("DEFAULT");
+      }
+
+    }
+
 ## SqlString
 
 `SqlString` represents text data that needs escaped.

@@ -22,7 +22,9 @@ No raw runtime string ever touches `appendSafe` here.
       let b = new SqlBuilder();
       b.appendSafe("DELETE FROM ");
       b.appendSafe(tableDef.tableName.sqlValue);
-      b.appendSafe(" WHERE id = ");
+      b.appendSafe(" WHERE ");
+      b.appendSafe(tableDef.pkName());
+      b.appendSafe(" = ");
       b.appendInt32(id);
       b.accumulated
     }

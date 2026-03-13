@@ -433,24 +433,41 @@ Not exported — the only path to an instance is through `changeset()`.
       }
 
       // toInsertSql: generates INSERT INTO … (cols) VALUES (vals)
+      // Skips virtual fields. Uses defaultValue when field not in changes but has a default.
       public toInsertSql(): SqlFragment throws Bubble {
         if (!_isValid) { bubble() }
         for (var i = 0; i < _tableDef.fields.length; ++i) {
           let f = _tableDef.fields[i];
-          if (!f.nullable && !_changes.has(f.name.sqlValue)) {
+          if (f.virtual) { continue; }
+          let dv = f.defaultValue;
+          if (!f.nullable && !_changes.has(f.name.sqlValue) && dv == null) {
             bubble()
           }
         }
-        let pairs = _changes.toList();
-        if (pairs.length == 0) { bubble() }
         let colNames = new ListBuilder<String>();
         let valParts = new ListBuilder<SqlPart>();
+        // First add fields from changes (skip virtual)
+        let pairs = _changes.toList();
         for (var i = 0; i < pairs.length; ++i) {
           let pair = pairs[i];
           let fd = _tableDef.field(pair.key);
+          if (fd.virtual) { continue; }
           colNames.add(fd.name.sqlValue);
           valParts.add(valueToSqlPart(fd, pair.value));
         }
+        // Then add fields with defaults that aren't in changes
+        for (var i = 0; i < _tableDef.fields.length; ++i) {
+          let f = _tableDef.fields[i];
+          if (f.virtual) { continue; }
+          let dv = f.defaultValue;
+          if (dv != null) {
+            if (!_changes.has(f.name.sqlValue)) {
+              colNames.add(f.name.sqlValue);
+              valParts.add(dv);
+            }
+          }
+        }
+        if (valParts.length == 0) { bubble() }
         let b = new SqlBuilder();
         b.appendSafe("INSERT INTO ");
         b.appendSafe(_tableDef.tableName.sqlValue);
@@ -466,7 +483,9 @@ Not exported — the only path to an instance is through `changeset()`.
         b.accumulated
       }
 
-      // toUpdateSql: generates UPDATE … SET col = val, … WHERE id = ?
+      // toUpdateSql: generates UPDATE … SET col = val, … WHERE pk = ?
+      // Uses tableDef.pkName() for the primary key column (defaults to "id").
+      // Skips virtual fields.
       public toUpdateSql(id: Int): SqlFragment throws Bubble {
         if (!_isValid) { bubble() }
         let pairs = _changes.toList();
@@ -475,15 +494,21 @@ Not exported — the only path to an instance is through `changeset()`.
         b.appendSafe("UPDATE ");
         b.appendSafe(_tableDef.tableName.sqlValue);
         b.appendSafe(" SET ");
+        var setCount = 0;
         for (var i = 0; i < pairs.length; ++i) {
-          if (i > 0) { b.appendSafe(", "); }
           let pair = pairs[i];
           let fd = _tableDef.field(pair.key);
+          if (fd.virtual) { continue; }
+          if (setCount > 0) { b.appendSafe(", "); }
           b.appendSafe(fd.name.sqlValue);
           b.appendSafe(" = ");
           b.appendPart(valueToSqlPart(fd, pair.value));
+          setCount = setCount + 1;
         }
-        b.appendSafe(" WHERE id = ");
+        if (setCount == 0) { bubble() }
+        b.appendSafe(" WHERE ");
+        b.appendSafe(_tableDef.pkName());
+        b.appendSafe(" = ");
         b.appendInt32(id);
         b.accumulated
       }

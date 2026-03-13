@@ -69,21 +69,27 @@ making it impossible to forget to update the SQL escaping logic.
 ## FieldDef
 
 A single column definition. `name` is a `SafeIdentifier` so it is
-validated before it can be used anywhere in SQL construction.
+validated before it can be used anywhere in SQL construction. Optional
+`defaultValue` provides a default when the field is absent from changes.
+`virtual` fields are excluded from INSERT/UPDATE SQL generation.
 
     export class FieldDef(
       public name: SafeIdentifier,
       public fieldType: FieldType,
       public nullable: Boolean,
+      public defaultValue: SqlPart?,
+      public virtual: Boolean,
     ) {}
 
 ## TableDef
 
-Describes a full table: its SQL name and ordered list of columns.
+Describes a full table: its SQL name, ordered list of columns, and optional
+primary key. When `primaryKey` is null, defaults to `"id"` for UPDATE/DELETE.
 
     export class TableDef(
       public tableName: SafeIdentifier,
       public fields: List<FieldDef>,
+      public primaryKey: SafeIdentifier?,
     ) {
 
       // field: look up a FieldDef by name, used for type dispatch. Bubbles if not found.
@@ -94,4 +100,26 @@ Describes a full table: its SQL name and ordered list of columns.
         bubble()
       }
 
+      // pkName: returns the primary key column name, defaulting to "id"
+      public pkName(): String {
+        let pk = primaryKey;
+        if (pk != null) {
+          return pk.sqlValue;
+        }
+        "id"
+      }
+
+    }
+
+## timestamps
+
+Helper that returns a pair of DateField definitions for `inserted_at` and
+`updated_at`, both nullable with `SqlDefault` values (rendered as `DEFAULT`
+in INSERT SQL, allowing the database to fill in the current timestamp).
+
+    export let timestamps(): List<FieldDef> throws Bubble {
+      [
+        new FieldDef(safeIdentifier("inserted_at"), new DateField(), true, new SqlDefault(), false),
+        new FieldDef(safeIdentifier("updated_at"), new DateField(), true, new SqlDefault(), false),
+      ]
     }

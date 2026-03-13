@@ -8,12 +8,12 @@
 
     let userTable(): TableDef {
       new TableDef(csid("users"), [
-        new FieldDef(csid("name"),   new StringField(), false),
-        new FieldDef(csid("email"),  new StringField(), false),
-        new FieldDef(csid("age"),    new IntField(),    true),
-        new FieldDef(csid("score"),  new FloatField(),  true),
-        new FieldDef(csid("active"), new BoolField(),   true),
-      ])
+        new FieldDef(csid("name"),   new StringField(), false, null, false),
+        new FieldDef(csid("email"),  new StringField(), false, null, false),
+        new FieldDef(csid("age"),    new IntField(),    true, null, false),
+        new FieldDef(csid("score"),  new FloatField(),  true, null, false),
+        new FieldDef(csid("active"), new BoolField(),   true, null, false),
+      ], null)
     }
 
 ## cast
@@ -206,9 +206,9 @@
     test("toInsertSql enforces non-nullable fields independently of isValid") {
       // Build a table where name is non-nullable
       let strictTable = new TableDef(csid("posts"), [
-        new FieldDef(csid("title"), new StringField(), false),
-        new FieldDef(csid("body"),  new StringField(), true),
-      ]);
+        new FieldDef(csid("title"), new StringField(), false, null, false),
+        new FieldDef(csid("body"),  new StringField(), true, null, false),
+      ], null);
       // Provide body only — title is required but missing
       let params = new Map<String, String>([new Pair("body", "hello")]);
       let cs = changeset(strictTable, params).cast([csid("body")]);
@@ -452,9 +452,9 @@
 
     test("validateConfirmation passes when fields match") {
       let tbl = new TableDef(csid("users"), [
-        new FieldDef(csid("password"), new StringField(), false),
-        new FieldDef(csid("password_confirmation"), new StringField(), true),
-      ]);
+        new FieldDef(csid("password"), new StringField(), false, null, false),
+        new FieldDef(csid("password_confirmation"), new StringField(), true, null, false),
+      ], null);
       let params = new Map<String, String>([
         new Pair("password", "secret123"),
         new Pair("password_confirmation", "secret123"),
@@ -467,9 +467,9 @@
 
     test("validateConfirmation fails when fields differ") {
       let tbl = new TableDef(csid("users"), [
-        new FieldDef(csid("password"), new StringField(), false),
-        new FieldDef(csid("password_confirmation"), new StringField(), true),
-      ]);
+        new FieldDef(csid("password"), new StringField(), false, null, false),
+        new FieldDef(csid("password_confirmation"), new StringField(), true, null, false),
+      ], null);
       let params = new Map<String, String>([
         new Pair("password", "secret123"),
         new Pair("password_confirmation", "wrong456"),
@@ -483,9 +483,9 @@
 
     test("validateConfirmation fails when confirmation missing") {
       let tbl = new TableDef(csid("users"), [
-        new FieldDef(csid("password"), new StringField(), false),
-        new FieldDef(csid("password_confirmation"), new StringField(), true),
-      ]);
+        new FieldDef(csid("password"), new StringField(), false, null, false),
+        new FieldDef(csid("password_confirmation"), new StringField(), true, null, false),
+      ], null);
       let params = new Map<String, String>([
         new Pair("password", "secret123"),
       ]);
@@ -563,4 +563,115 @@
         .cast([csid("name")])
         .validateEndsWith(csid("name"), "abc");
       assert(cs.isValid) { "abcabc should end with abc" };
+    }
+
+## Phase 7: Schema Enrichment SQL Tests
+
+    test("toInsertSql uses default value when field not in changes") {
+      let tbl = new TableDef(csid("posts"), [
+        new FieldDef(csid("title"), new StringField(), false, null, false),
+        new FieldDef(csid("status"), new StringField(), false, new SqlDefault(), false),
+      ], null);
+      let params = new Map<String, String>([new Pair("title", "Hello")]);
+      let cs = changeset(tbl, params).cast([csid("title")]);
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("INSERT INTO posts") is StringIndex) { "has INSERT INTO: ${s}" };
+      assert(s.indexOf("'Hello'") is StringIndex) { "has title value: ${s}" };
+      assert(s.indexOf("DEFAULT") is StringIndex) { "status should use DEFAULT: ${s}" };
+    }
+
+    test("toInsertSql change overrides default value") {
+      let tbl = new TableDef(csid("posts"), [
+        new FieldDef(csid("title"), new StringField(), false, null, false),
+        new FieldDef(csid("status"), new StringField(), false, new SqlDefault(), false),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("title", "Hello"),
+        new Pair("status", "published"),
+      ]);
+      let cs = changeset(tbl, params).cast([csid("title"), csid("status")]);
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("'published'") is StringIndex) { "should use provided value: ${s}" };
+    }
+
+    test("toInsertSql with timestamps uses DEFAULT") {
+      let ts = timestamps() orelse panic();
+      let fields = new ListBuilder<FieldDef>();
+      fields.add(new FieldDef(csid("title"), new StringField(), false, null, false));
+      for (let t of ts) { fields.add(t); }
+      let tbl = new TableDef(csid("articles"), fields.toList(), null);
+      let params = new Map<String, String>([new Pair("title", "News")]);
+      let cs = changeset(tbl, params).cast([csid("title")]);
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("inserted_at") is StringIndex) { "should include inserted_at: ${s}" };
+      assert(s.indexOf("updated_at") is StringIndex) { "should include updated_at: ${s}" };
+      assert(s.indexOf("DEFAULT") is StringIndex) { "timestamps should use DEFAULT: ${s}" };
+    }
+
+    test("toInsertSql skips virtual fields") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+        new FieldDef(csid("full_name"), new StringField(), true, null, true),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("full_name", "Alice Smith"),
+      ]);
+      let cs = changeset(tbl, params).cast([csid("name"), csid("full_name")]);
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("'Alice'") is StringIndex) { "name should be included: ${s}" };
+      assert(!(s.indexOf("full_name") is StringIndex)) { "virtual field should be excluded: ${s}" };
+    }
+
+    test("toInsertSql allows missing non-nullable virtual field") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+        new FieldDef(csid("computed"), new StringField(), false, null, true),
+      ], null);
+      let params = new Map<String, String>([new Pair("name", "Alice")]);
+      let cs = changeset(tbl, params).cast([csid("name")]);
+      // computed is non-nullable but virtual — should NOT cause bubble
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("'Alice'") is StringIndex) { "should succeed: ${s}" };
+    }
+
+    test("toUpdateSql skips virtual fields") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+        new FieldDef(csid("display"), new StringField(), true, null, true),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("name", "Bob"),
+        new Pair("display", "Bobby"),
+      ]);
+      let cs = changeset(tbl, params).cast([csid("name"), csid("display")]);
+      let s = (cs.toUpdateSql(1) orelse panic()).toString();
+      assert(s.indexOf("name = 'Bob'") is StringIndex) { "name should be in SET: ${s}" };
+      assert(!(s.indexOf("display") is StringIndex)) { "virtual field excluded from UPDATE: ${s}" };
+    }
+
+    test("toUpdateSql uses custom primary key") {
+      let tbl = new TableDef(csid("posts"), [
+        new FieldDef(csid("title"), new StringField(), false, null, false),
+      ], csid("post_id"));
+      let params = new Map<String, String>([new Pair("title", "Updated")]);
+      let cs = changeset(tbl, params).cast([csid("title")]);
+      let s = (cs.toUpdateSql(99) orelse panic()).toString();
+      assert(s == "UPDATE posts SET title = 'Updated' WHERE post_id = 99") { "got: ${s}" };
+    }
+
+    test("deleteSql uses custom primary key") {
+      let tbl = new TableDef(csid("posts"), [
+        new FieldDef(csid("title"), new StringField(), false, null, false),
+      ], csid("post_id"));
+      let s = deleteSql(tbl, 42).toString();
+      assert(s == "DELETE FROM posts WHERE post_id = 42") { "got: ${s}" };
+    }
+
+    test("deleteSql uses default id when primaryKey null") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+      ], null);
+      let s = deleteSql(tbl, 7).toString();
+      assert(s == "DELETE FROM users WHERE id = 7") { "got: ${s}" };
     }
