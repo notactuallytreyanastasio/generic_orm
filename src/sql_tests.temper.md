@@ -149,3 +149,30 @@ We can also append individual parts.
       let parts: List<SqlPart> = [new SqlString("a'b"), new SqlInt32(3)];
       assert(sql"select ${parts}".toString() == "select 'a''b', 3");
     }
+
+## Audit Phase 4: New tests from coverage/test/complexity audits
+
+    test("SqlInt32 negative and zero values") {
+      assert(sql"v = ${-42}".toString() == "v = -42") { "negative int" };
+      assert(sql"v = ${0}".toString() == "v = 0") { "zero int" };
+    }
+
+    test("SqlInt64 negative value") {
+      assert(sql"v = ${-99i64}".toString() == "v = -99") { "negative int64" };
+    }
+
+    test("single element list rendering") {
+      assert(sql"v IN (${[42]})".toString() == "v IN (42)") { "single int" };
+      assert(sql"v IN (${["only"]})".toString() == "v IN ('only')") { "single string" };
+    }
+
+    test("SqlDefault renders DEFAULT keyword") {
+      let b = new SqlBuilder();
+      b.appendSafe("v = ");
+      b.appendPart(new SqlDefault());
+      assert(b.accumulated.toString() == "v = DEFAULT") { "default keyword" };
+    }
+
+    test("SqlString with backslash") {
+      assert(sql"v = ${"a\\b"}".toString() == "v = 'a\\b'") { "backslash passthrough" };
+    }

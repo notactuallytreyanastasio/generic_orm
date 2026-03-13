@@ -96,6 +96,13 @@ Not exported — the only path to an instance is through `changeset()`.
       public get errors(): List<ChangesetError> { _errors }
       public get isValid(): Boolean { _isValid }
 
+      // addError: centralizes error construction (extracted from 15 validator copies)
+      private addError(field: String, message: String): Changeset {
+        let eb = _errors.toListBuilder();
+        eb.add(new ChangesetError(field, message));
+        new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false)
+      }
+
       // cast: whitelists fields by SafeIdentifier
       public cast(allowedFields: List<SafeIdentifier>): Changeset {
         let mb = new MapBuilder<String, String>();
@@ -128,10 +135,7 @@ Not exported — the only path to an instance is through `changeset()`.
         let val = _changes.getOr(field.sqlValue, "");
         let len = val.countBetween(String.begin, val.end);
         if (len < min || len > max) {
-          let msg = "must be between ${min} and ${max} characters";
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, msg));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
+          return addError(field.sqlValue, "must be between ${min} and ${max} characters");
         }
         this
       }
@@ -142,11 +146,7 @@ Not exported — the only path to an instance is through `changeset()`.
         let val = _changes.getOr(field.sqlValue, "");
         if (val.isEmpty) { return this; }
         let parseOk = do { val.toInt32(); true } orelse false;
-        if (!parseOk) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must be an integer"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!parseOk) { return addError(field.sqlValue, "must be an integer"); }
         this
       }
 
@@ -156,11 +156,7 @@ Not exported — the only path to an instance is through `changeset()`.
         let val = _changes.getOr(field.sqlValue, "");
         if (val.isEmpty) { return this; }
         let parseOk = do { val.toInt64(); true } orelse false;
-        if (!parseOk) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must be a 64-bit integer"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!parseOk) { return addError(field.sqlValue, "must be a 64-bit integer"); }
         this
       }
 
@@ -170,11 +166,7 @@ Not exported — the only path to an instance is through `changeset()`.
         let val = _changes.getOr(field.sqlValue, "");
         if (val.isEmpty) { return this; }
         let parseOk = do { val.toFloat64(); true } orelse false;
-        if (!parseOk) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must be a number"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!parseOk) { return addError(field.sqlValue, "must be a number"); }
         this
       }
 
@@ -186,9 +178,7 @@ Not exported — the only path to an instance is through `changeset()`.
         let isTrue = val == "true" || val == "1" || val == "yes" || val == "on";
         let isFalse = val == "false" || val == "0" || val == "no" || val == "off";
         if (!isTrue && !isFalse) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must be a boolean (true/false/1/0/yes/no/on/off)"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
+          return addError(field.sqlValue, "must be a boolean (true/false/1/0/yes/no/on/off)");
         }
         this
       }
@@ -231,11 +221,7 @@ Not exported — the only path to an instance is through `changeset()`.
         for (let a of allowed) {
           if (a == val) { found = true; }
         }
-        if (!found) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "is not included in the list"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!found) { return addError(field.sqlValue, "is not included in the list"); }
         this
       }
 
@@ -248,11 +234,7 @@ Not exported — the only path to an instance is through `changeset()`.
         for (let d of disallowed) {
           if (d == val) { found = true; }
         }
-        if (found) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "is reserved"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (found) { return addError(field.sqlValue, "is reserved"); }
         this
       }
 
@@ -262,51 +244,27 @@ Not exported — the only path to an instance is through `changeset()`.
         if (!_changes.has(field.sqlValue)) { return this; }
         let val = _changes.getOr(field.sqlValue, "");
         let parseOk = do { val.toFloat64(); true } orelse false;
-        if (!parseOk) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must be a number"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!parseOk) { return addError(field.sqlValue, "must be a number"); }
         let num = do { val.toFloat64() } orelse 0.0;
         let gt = opts.greaterThan;
         if (gt != null) {
-          if (!(num > gt)) {
-            let eb = _errors.toListBuilder();
-            eb.add(new ChangesetError(field.sqlValue, "must be greater than ${gt}"));
-            return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-          }
+          if (!(num > gt)) { return addError(field.sqlValue, "must be greater than ${gt}"); }
         }
         let lt = opts.lessThan;
         if (lt != null) {
-          if (!(num < lt)) {
-            let eb = _errors.toListBuilder();
-            eb.add(new ChangesetError(field.sqlValue, "must be less than ${lt}"));
-            return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-          }
+          if (!(num < lt)) { return addError(field.sqlValue, "must be less than ${lt}"); }
         }
         let gte = opts.greaterThanOrEqual;
         if (gte != null) {
-          if (!(num >= gte)) {
-            let eb = _errors.toListBuilder();
-            eb.add(new ChangesetError(field.sqlValue, "must be greater than or equal to ${gte}"));
-            return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-          }
+          if (!(num >= gte)) { return addError(field.sqlValue, "must be greater than or equal to ${gte}"); }
         }
         let lte = opts.lessThanOrEqual;
         if (lte != null) {
-          if (!(num <= lte)) {
-            let eb = _errors.toListBuilder();
-            eb.add(new ChangesetError(field.sqlValue, "must be less than or equal to ${lte}"));
-            return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-          }
+          if (!(num <= lte)) { return addError(field.sqlValue, "must be less than or equal to ${lte}"); }
         }
         let eq = opts.equalTo;
         if (eq != null) {
-          if (!(num == eq)) {
-            let eb = _errors.toListBuilder();
-            eb.add(new ChangesetError(field.sqlValue, "must be equal to ${eq}"));
-            return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-          }
+          if (!(num == eq)) { return addError(field.sqlValue, "must be equal to ${eq}"); }
         }
         this
       }
@@ -317,11 +275,7 @@ Not exported — the only path to an instance is through `changeset()`.
         if (!_changes.has(field.sqlValue)) { return this; }
         let val = _changes.getOr(field.sqlValue, "");
         let accepted = val == "true" || val == "1" || val == "yes" || val == "on";
-        if (!accepted) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must be accepted"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!accepted) { return addError(field.sqlValue, "must be accepted"); }
         this
       }
 
@@ -331,11 +285,7 @@ Not exported — the only path to an instance is through `changeset()`.
         if (!_changes.has(field.sqlValue)) { return this; }
         let val = _changes.getOr(field.sqlValue, "");
         let conf = _changes.getOr(confirmationField.sqlValue, "");
-        if (val != conf) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(confirmationField.sqlValue, "does not match"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (val != conf) { return addError(confirmationField.sqlValue, "does not match"); }
         this
       }
 
@@ -345,9 +295,7 @@ Not exported — the only path to an instance is through `changeset()`.
         if (!_changes.has(field.sqlValue)) { return this; }
         let val = _changes.getOr(field.sqlValue, "");
         if (!(val.indexOf(substring) is StringIndex)) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must contain the given substring"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
+          return addError(field.sqlValue, "must contain the given substring");
         }
         this
       }
@@ -363,11 +311,7 @@ Not exported — the only path to an instance is through `changeset()`.
         } else {
           false
         };
-        if (!starts) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must start with the given prefix"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
-        }
+        if (!starts) { return addError(field.sqlValue, "must start with the given prefix"); }
         this
       }
 
@@ -380,9 +324,7 @@ Not exported — the only path to an instance is through `changeset()`.
         let valLen = val.countBetween(String.begin, val.end);
         let suffixLen = suffix.countBetween(String.begin, suffix.end);
         if (valLen < suffixLen) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must end with the given suffix"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
+          return addError(field.sqlValue, "must end with the given suffix");
         }
         let skipCount = valLen - suffixLen;
         var strIdx = String.begin;
@@ -402,9 +344,7 @@ Not exported — the only path to an instance is through `changeset()`.
           }
         }
         if (!matches) {
-          let eb = _errors.toListBuilder();
-          eb.add(new ChangesetError(field.sqlValue, "must end with the given suffix"));
-          return new ChangesetImpl(_tableDef, _params, _changes, eb.toList(), false);
+          return addError(field.sqlValue, "must end with the given suffix");
         }
         this
       }

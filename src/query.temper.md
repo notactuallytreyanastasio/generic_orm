@@ -154,6 +154,58 @@ keywords are emitted. The `condition` getter exposes the underlying
       public keyword(): String { "OR" }
     }
 
+## Shared rendering helpers
+
+Extracted to eliminate duplication across Query, countSql, UpdateQuery, and
+DeleteQuery. Not exported — internal to the module.
+
+    let renderWhere(b: SqlBuilder, conditions: List<WhereClause>): Void {
+      if (!conditions.isEmpty) {
+        b.appendSafe(" WHERE ");
+        b.appendFragment(conditions[0].condition);
+        for (var i = 1; i < conditions.length; ++i) {
+          b.appendSafe(" ");
+          b.appendSafe(conditions[i].keyword());
+          b.appendSafe(" ");
+          b.appendFragment(conditions[i].condition);
+        }
+      }
+    }
+
+    let renderJoins(b: SqlBuilder, joinClauses: List<JoinClause>): Void {
+      for (let jc of joinClauses) {
+        b.appendSafe(" ");
+        b.appendSafe(jc.joinType.keyword());
+        b.appendSafe(" ");
+        b.appendSafe(jc.table.sqlValue);
+        let oc = jc.onCondition;
+        if (oc != null) {
+          b.appendSafe(" ON ");
+          b.appendFragment(oc);
+        }
+      }
+    }
+
+    let renderGroupBy(b: SqlBuilder, groupByFields: List<SafeIdentifier>): Void {
+      if (!groupByFields.isEmpty) {
+        b.appendSafe(" GROUP BY ");
+        b.appendSafe(groupByFields.join(", ") { f => f.sqlValue });
+      }
+    }
+
+    let renderHaving(b: SqlBuilder, havingConditions: List<WhereClause>): Void {
+      if (!havingConditions.isEmpty) {
+        b.appendSafe(" HAVING ");
+        b.appendFragment(havingConditions[0].condition);
+        for (var i = 1; i < havingConditions.length; ++i) {
+          b.appendSafe(" ");
+          b.appendSafe(havingConditions[i].keyword());
+          b.appendSafe(" ");
+          b.appendFragment(havingConditions[i].condition);
+        }
+      }
+    }
+
 ## Query
 
 Immutable query builder. Every mutation method returns a new `Query` instance.
@@ -401,44 +453,10 @@ typically done through `from()` and the builder methods.
         b.appendSafe(" FROM ");
         b.appendSafe(tableName.sqlValue);
 
-        for (let jc of joinClauses) {
-          b.appendSafe(" ");
-          b.appendSafe(jc.joinType.keyword());
-          b.appendSafe(" ");
-          b.appendSafe(jc.table.sqlValue);
-          let oc = jc.onCondition;
-          if (oc != null) {
-            b.appendSafe(" ON ");
-            b.appendFragment(oc);
-          }
-        }
-
-        if (!conditions.isEmpty) {
-          b.appendSafe(" WHERE ");
-          b.appendFragment(conditions[0].condition);
-          for (var i = 1; i < conditions.length; ++i) {
-            b.appendSafe(" ");
-            b.appendSafe(conditions[i].keyword());
-            b.appendSafe(" ");
-            b.appendFragment(conditions[i].condition);
-          }
-        }
-
-        if (!groupByFields.isEmpty) {
-          b.appendSafe(" GROUP BY ");
-          b.appendSafe(groupByFields.join(", ") { f => f.sqlValue });
-        }
-
-        if (!havingConditions.isEmpty) {
-          b.appendSafe(" HAVING ");
-          b.appendFragment(havingConditions[0].condition);
-          for (var i = 1; i < havingConditions.length; ++i) {
-            b.appendSafe(" ");
-            b.appendSafe(havingConditions[i].keyword());
-            b.appendSafe(" ");
-            b.appendFragment(havingConditions[i].condition);
-          }
-        }
+        renderJoins(b, joinClauses);
+        renderWhere(b, conditions);
+        renderGroupBy(b, groupByFields);
+        renderHaving(b, havingConditions);
 
         if (!orderClauses.isEmpty) {
           b.appendSafe(" ORDER BY ");
@@ -479,41 +497,10 @@ typically done through `from()` and the builder methods.
         let b = new SqlBuilder();
         b.appendSafe("SELECT COUNT(*) FROM ");
         b.appendSafe(tableName.sqlValue);
-        for (let jc of joinClauses) {
-          b.appendSafe(" ");
-          b.appendSafe(jc.joinType.keyword());
-          b.appendSafe(" ");
-          b.appendSafe(jc.table.sqlValue);
-          let oc2 = jc.onCondition;
-          if (oc2 != null) {
-            b.appendSafe(" ON ");
-            b.appendFragment(oc2);
-          }
-        }
-        if (!conditions.isEmpty) {
-          b.appendSafe(" WHERE ");
-          b.appendFragment(conditions[0].condition);
-          for (var i = 1; i < conditions.length; ++i) {
-            b.appendSafe(" ");
-            b.appendSafe(conditions[i].keyword());
-            b.appendSafe(" ");
-            b.appendFragment(conditions[i].condition);
-          }
-        }
-        if (!groupByFields.isEmpty) {
-          b.appendSafe(" GROUP BY ");
-          b.appendSafe(groupByFields.join(", ") { f => f.sqlValue });
-        }
-        if (!havingConditions.isEmpty) {
-          b.appendSafe(" HAVING ");
-          b.appendFragment(havingConditions[0].condition);
-          for (var i = 1; i < havingConditions.length; ++i) {
-            b.appendSafe(" ");
-            b.appendSafe(havingConditions[i].keyword());
-            b.appendSafe(" ");
-            b.appendFragment(havingConditions[i].condition);
-          }
-        }
+        renderJoins(b, joinClauses);
+        renderWhere(b, conditions);
+        renderGroupBy(b, groupByFields);
+        renderHaving(b, havingConditions);
         b.accumulated
       }
 
@@ -733,14 +720,7 @@ conditions are present, preventing accidental full-table updates.
           b.appendSafe(" = ");
           b.appendPart(setClauses[i].value);
         }
-        b.appendSafe(" WHERE ");
-        b.appendFragment(conditions[0].condition);
-        for (var i = 1; i < conditions.length; ++i) {
-          b.appendSafe(" ");
-          b.appendSafe(conditions[i].keyword());
-          b.appendSafe(" ");
-          b.appendFragment(conditions[i].condition);
-        }
+        renderWhere(b, conditions);
         let lv = limitVal;
         if (lv != null) {
           b.appendSafe(" LIMIT ");
@@ -788,14 +768,7 @@ conditions are present, preventing accidental full-table deletes.
         let b = new SqlBuilder();
         b.appendSafe("DELETE FROM ");
         b.appendSafe(tableName.sqlValue);
-        b.appendSafe(" WHERE ");
-        b.appendFragment(conditions[0].condition);
-        for (var i = 1; i < conditions.length; ++i) {
-          b.appendSafe(" ");
-          b.appendSafe(conditions[i].keyword());
-          b.appendSafe(" ");
-          b.appendFragment(conditions[i].condition);
-        }
+        renderWhere(b, conditions);
         let lv = limitVal;
         if (lv != null) {
           b.appendSafe(" LIMIT ");

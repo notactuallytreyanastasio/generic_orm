@@ -101,3 +101,23 @@
       assert(!normal.virtual) { "normal field should not be virtual" };
       assert(virt.virtual) { "virtual field should be virtual" };
     }
+
+## Audit Phase 4: New tests from coverage/test/complexity audits
+
+    test("safeIdentifier accepts single character names") {
+      let a = safeIdentifier("a") orelse panic();
+      assert(a.sqlValue == "a") { "single letter should work" };
+      let u = safeIdentifier("_") orelse panic();
+      assert(u.sqlValue == "_") { "single underscore should work" };
+    }
+
+    test("safeIdentifier accepts all-underscore names") {
+      let id = safeIdentifier("___") orelse panic();
+      assert(id.sqlValue == "___") { "all underscores should work" };
+    }
+
+    test("TableDef with empty field list") {
+      let tbl = new TableDef(safeIdentifier("empty") orelse panic(), [], null);
+      let didBubble = do { tbl.field("anything"); false } orelse true;
+      assert(didBubble) { "field lookup on empty table should bubble" };
+    }

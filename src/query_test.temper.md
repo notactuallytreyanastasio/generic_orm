@@ -723,3 +723,69 @@
       } orelse panic();
       assert(q.toSql().toString() == "SELECT * FROM accounts WHERE id = 42 LIMIT 1 FOR UPDATE") { "lock full query" };
     }
+
+## Audit Phase 4: New tests from coverage/test/complexity audits
+
+    test("query builder immutability - two queries from same base") {
+      let base = from(sid("users")).where(sql"active = ${true}");
+      let q1 = do { base.limit(10) } orelse panic();
+      let q2 = do { base.limit(20) } orelse panic();
+      assert(q1.toSql().toString() == "SELECT * FROM users WHERE active = TRUE LIMIT 10") { "q1" };
+      assert(q2.toSql().toString() == "SELECT * FROM users WHERE active = TRUE LIMIT 20") { "q2" };
+    }
+
+    test("limit zero produces LIMIT 0") {
+      let q = do { from(sid("users")).limit(0) } orelse panic();
+      assert(q.toSql().toString() == "SELECT * FROM users LIMIT 0") { "limit 0" };
+    }
+
+    test("safeToSql with zero defaultLimit") {
+      let q = from(sid("users"));
+      let s = do { q.safeToSql(0) } orelse panic();
+      assert(s.toString() == "SELECT * FROM users LIMIT 0") { "safeToSql 0" };
+    }
+
+    test("UpdateQuery limit bubbles on negative") {
+      let didBubble = do {
+        update(sid("users"))
+          .set(sid("name"), new SqlString("x"))
+          .where(sql"id = ${1}")
+          .limit(-1);
+        false
+      } orelse true;
+      assert(didBubble) { "UpdateQuery negative limit should bubble" };
+    }
+
+    test("DeleteQuery limit bubbles on negative") {
+      let didBubble = do {
+        deleteFrom(sid("users"))
+          .where(sql"id = ${1}")
+          .limit(-1);
+        false
+      } orelse true;
+      assert(didBubble) { "DeleteQuery negative limit should bubble" };
+    }
+
+    test("UpdateQuery immutability - two from same base") {
+      let base = update(sid("users"))
+        .set(sid("name"), new SqlString("Alice"))
+        .where(sql"id = ${1}");
+      let q1 = base.set(sid("age"), new SqlInt32(25));
+      let q2 = base.set(sid("age"), new SqlInt32(30));
+      let s1 = (q1.toSql() orelse panic()).toString();
+      let s2 = (q2.toSql() orelse panic()).toString();
+      assert(s1.indexOf("25") is StringIndex) { "q1 should have 25: ${s1}" };
+      assert(s2.indexOf("30") is StringIndex) { "q2 should have 30: ${s2}" };
+      assert(!(s1.indexOf("30") is StringIndex)) { "q1 should NOT have 30: ${s1}" };
+    }
+
+    test("DeleteQuery immutability") {
+      let base = deleteFrom(sid("users")).where(sql"active = ${false}");
+      let q1 = base.where(sql"age < ${18}");
+      let q2 = base.where(sql"age > ${65}");
+      let s1 = (q1.toSql() orelse panic()).toString();
+      let s2 = (q2.toSql() orelse panic()).toString();
+      assert(s1.indexOf("age < 18") is StringIndex) { "q1: ${s1}" };
+      assert(s2.indexOf("age > 65") is StringIndex) { "q2: ${s2}" };
+      assert(!(s1.indexOf("age > 65") is StringIndex)) { "q1 should not have q2 condition: ${s1}" };
+    }

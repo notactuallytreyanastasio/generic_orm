@@ -675,3 +675,279 @@
       let s = deleteSql(tbl, 7).toString();
       assert(s == "DELETE FROM users WHERE id = 7") { "got: ${s}" };
     }
+
+## Audit Phase 4: New tests from coverage/test/complexity audits
+
+### Already-invalid early return pattern
+
+    test("already-invalid changeset skips subsequent validators") {
+      let params = new Map<String, String>([
+        new Pair("name", "A"),
+        new Pair("email", "alice@example.com"),
+      ]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name"), csid("email")])
+        .validateLength(csid("name"), 3, 50)
+        .validateRequired([csid("name"), csid("email")])
+        .validateContains(csid("email"), "@");
+      assert(!cs.isValid) { "should be invalid from validateLength" };
+      assert(cs.errors.length == 1) { "should have exactly 1 error, not accumulate: ${cs.errors.length}" };
+      assert(cs.errors[0].field == "name") { "error should be on name" };
+    }
+
+### validateNumber untested code paths
+
+    test("validateNumber lessThanOrEqual passes at boundary") {
+      let params = new Map<String, String>([new Pair("score", "10.0")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, null, null, 10.0, null));
+      assert(cs.isValid) { "10.0 <= 10.0 should pass" };
+    }
+
+    test("validateNumber lessThanOrEqual fails above boundary") {
+      let params = new Map<String, String>([new Pair("score", "10.1")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, null, null, 10.0, null));
+      assert(!cs.isValid) { "10.1 <= 10.0 should fail" };
+      assert(cs.errors[0].message == "must be less than or equal to 10.0") { "correct message" };
+    }
+
+    test("validateNumber equalTo passes when equal") {
+      let params = new Map<String, String>([new Pair("score", "42.0")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, null, null, null, 42.0));
+      assert(cs.isValid) { "42.0 == 42.0 should pass" };
+    }
+
+    test("validateNumber equalTo fails when not equal") {
+      let params = new Map<String, String>([new Pair("score", "41.9")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, null, null, null, 42.0));
+      assert(!cs.isValid) { "41.9 == 42.0 should fail" };
+      assert(cs.errors[0].message == "must be equal to 42.0") { "correct message" };
+    }
+
+    test("validateNumber greaterThan fails at exact threshold") {
+      let params = new Map<String, String>([new Pair("age", "18")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateNumber(csid("age"), new NumberValidationOpts(18.0, null, null, null, null));
+      assert(!cs.isValid) { "18 > 18 should fail (strict greater than)" };
+    }
+
+    test("validateNumber lessThan fails at exact threshold") {
+      let params = new Map<String, String>([new Pair("score", "10.0")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateNumber(csid("score"), new NumberValidationOpts(null, 10.0, null, null, null));
+      assert(!cs.isValid) { "10.0 < 10.0 should fail (strict less than)" };
+    }
+
+### validateFloat invalid input
+
+    test("validateFloat fails for non-float string") {
+      let params = new Map<String, String>([new Pair("score", "abc")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("score")])
+        .validateFloat(csid("score"));
+      assert(!cs.isValid) { "abc should not parse as float" };
+      assert(cs.errors[0].message == "must be a number") { "correct message" };
+    }
+
+### toInsertSql with all 6 field types
+
+    test("toInsertSql with all six field types") {
+      let tbl = new TableDef(csid("records"), [
+        new FieldDef(csid("name"),     new StringField(), false, null, false),
+        new FieldDef(csid("count"),    new IntField(),    false, null, false),
+        new FieldDef(csid("big_id"),   new Int64Field(),  false, null, false),
+        new FieldDef(csid("rating"),   new FloatField(),  false, null, false),
+        new FieldDef(csid("active"),   new BoolField(),   false, null, false),
+        new FieldDef(csid("birthday"), new DateField(),   false, null, false),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("count", "42"),
+        new Pair("big_id", "9999999999"),
+        new Pair("rating", "3.14"),
+        new Pair("active", "true"),
+        new Pair("birthday", "2000-01-15"),
+      ]);
+      let cs = changeset(tbl, params).cast([
+        csid("name"), csid("count"), csid("big_id"),
+        csid("rating"), csid("active"), csid("birthday"),
+      ]);
+      let s = (cs.toInsertSql() orelse panic()).toString();
+      assert(s.indexOf("'Alice'") is StringIndex) { "string field: ${s}" };
+      assert(s.indexOf("42") is StringIndex) { "int field: ${s}" };
+      assert(s.indexOf("9999999999") is StringIndex) { "int64 field: ${s}" };
+      assert(s.indexOf("3.14") is StringIndex) { "float field: ${s}" };
+      assert(s.indexOf("TRUE") is StringIndex) { "bool field: ${s}" };
+      assert(s.indexOf("'2000-01-15'") is StringIndex) { "date field: ${s}" };
+    }
+
+### deleteChange + toInsertSql non-nullable interaction
+
+    test("deleteChange on non-nullable field causes toInsertSql to bubble") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+        new FieldDef(csid("email"), new StringField(), false, null, false),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("email", "a@b.com"),
+      ]);
+      let cs = changeset(tbl, params)
+        .cast([csid("name"), csid("email")])
+        .deleteChange(csid("email"));
+      let didBubble = do { cs.toInsertSql(); false } orelse true;
+      assert(didBubble) { "removing non-nullable field should make toInsertSql bubble" };
+    }
+
+### validateLength boundary values
+
+    test("validateLength passes at exact min") {
+      let params = new Map<String, String>([new Pair("name", "abc")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateLength(csid("name"), 3, 10);
+      assert(cs.isValid) { "length 3 should pass for min 3" };
+    }
+
+    test("validateLength passes at exact max") {
+      let params = new Map<String, String>([new Pair("name", "abcdefghij")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateLength(csid("name"), 1, 10);
+      assert(cs.isValid) { "length 10 should pass for max 10" };
+    }
+
+### validateAcceptance skip-when-absent
+
+    test("validateAcceptance skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("active")])
+        .validateAcceptance(csid("active"));
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+### Multiple validator composition
+
+    test("multiple validators chain correctly on valid changeset") {
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("email", "alice@example.com"),
+        new Pair("age", "25"),
+      ]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name"), csid("email"), csid("age")])
+        .validateRequired([csid("name"), csid("email")])
+        .validateLength(csid("name"), 2, 50)
+        .validateContains(csid("email"), "@")
+        .validateInt(csid("age"))
+        .validateNumber(csid("age"), new NumberValidationOpts(0.0, 150.0, null, null, null));
+      assert(cs.isValid) { "all validators should pass" };
+      assert(cs.errors.length == 0) { "no errors expected" };
+    }
+
+### toUpdateSql with multiple fields
+
+    test("toUpdateSql with multiple non-virtual fields") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+        new FieldDef(csid("email"), new StringField(), false, null, false),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("name", "Bob"),
+        new Pair("email", "bob@example.com"),
+      ]);
+      let cs = changeset(tbl, params).cast([csid("name"), csid("email")]);
+      let s = (cs.toUpdateSql(5) orelse panic()).toString();
+      assert(s.indexOf("name = 'Bob'") is StringIndex) { "name in SET: ${s}" };
+      assert(s.indexOf("email = 'bob@example.com'") is StringIndex) { "email in SET: ${s}" };
+      assert(s.indexOf("WHERE id = 5") is StringIndex) { "WHERE clause: ${s}" };
+    }
+
+### toUpdateSql all virtual fields bubbles
+
+    test("toUpdateSql bubbles when all changes are virtual fields") {
+      let tbl = new TableDef(csid("users"), [
+        new FieldDef(csid("name"), new StringField(), false, null, false),
+        new FieldDef(csid("computed"), new StringField(), true, null, true),
+      ], null);
+      let params = new Map<String, String>([
+        new Pair("name", "Alice"),
+        new Pair("computed", "derived"),
+      ]);
+      let cs = changeset(tbl, params).cast([csid("computed")]);
+      let didBubble = do { cs.toUpdateSql(1); false } orelse true;
+      assert(didBubble) { "should bubble when all changes are virtual" };
+    }
+
+### putChange satisfies validateRequired
+
+    test("putChange satisfies subsequent validateRequired") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .putChange(csid("name"), "Injected")
+        .validateRequired([csid("name")]);
+      assert(cs.isValid) { "putChange should satisfy required" };
+    }
+
+### validateStartsWith skip when absent
+
+    test("validateStartsWith skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateStartsWith(csid("name"), "Dr.");
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+### validateEndsWith skip when absent
+
+    test("validateEndsWith skips when field not in changes") {
+      let params = new Map<String, String>([]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("name")])
+        .validateEndsWith(csid("name"), ".com");
+      assert(cs.isValid) { "should be valid when field absent" };
+    }
+
+### validateInt boundary values
+
+    test("validateInt accepts zero") {
+      let params = new Map<String, String>([new Pair("age", "0")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateInt(csid("age"));
+      assert(cs.isValid) { "0 should be a valid int" };
+    }
+
+    test("validateInt accepts negative") {
+      let params = new Map<String, String>([new Pair("age", "-5")]);
+      let cs = changeset(userTable(), params)
+        .cast([csid("age")])
+        .validateInt(csid("age"));
+      assert(cs.isValid) { "-5 should be a valid int" };
+    }
+
+### Changeset immutability
+
+    test("changeset immutability - validators do not mutate base") {
+      let params = new Map<String, String>([
+        new Pair("name", "A"),
+        new Pair("email", "alice@example.com"),
+      ]);
+      let base = changeset(userTable(), params).cast([csid("name"), csid("email")]);
+      let failed = base.validateLength(csid("name"), 3, 50);
+      let passed = base.validateRequired([csid("name"), csid("email")]);
+      assert(!failed.isValid) { "failed branch should be invalid" };
+      assert(passed.isValid) { "passed branch should still be valid" };
+    }
