@@ -540,6 +540,41 @@ Assessment against SQL-relevant CWEs from the [2024 Top 25](https://cwe.mitre.or
 ### Per-Phase Security Analysis
 
 <details>
+<summary><strong>Phase 0: Core Foundation</strong></summary>
+
+| Component | Type Safety Mechanism | Injection Risk |
+|-----------|----------------------|----------------|
+| `SafeIdentifier` | Sealed interface — `ValidatedIdentifier` not exported, only `safeIdentifier()` constructor validates `[a-zA-Z_][a-zA-Z0-9_]*` | None |
+| `SqlPart` hierarchy | Sealed interface — compiler enforces exhaustive handling of all 8 subtypes | None |
+| `SqlString.formatTo()` | Character-by-character escaping — `'` → `''` | None |
+| `SqlInt32` / `SqlInt64` | Bare integer via `.toString()` — no string content possible | None |
+| `SqlFloat64.formatTo()` | NaN/Infinity → `NULL` (CWE-20 defense) | None |
+| `SqlBoolean.formatTo()` | Hardcoded `TRUE` / `FALSE` literals | None |
+| `SqlDate.formatTo()` | Quote-wrapped with character-by-character `'` escaping | None |
+| `SqlSource` | Trusted SQL fragments — only reachable via `appendSafe` | **Escape hatch** (see ORM-5) |
+| `SqlBuilder.appendSafe()` | Structure-only channel — never called with user input | None |
+| `SqlBuilder` typed appenders | `appendString` → `SqlString`, `appendInt32` → `SqlInt32`, etc. — no raw bypass | None |
+| `sql` template tag | Dispatches interpolated values to typed `SqlPart` constructors via `@overload` | None |
+| `SqlFragment.toString()` | Iterates `parts` and calls `formatTo` — no string concatenation of user data | None |
+| `from()` table name | Requires `SafeIdentifier` | None |
+| `Query.where()` condition | Accepts `SqlFragment` — type-safe parts only | None |
+| `Query.orderBy()` field | Requires `SafeIdentifier` | None |
+| `Query.select()` fields | Requires `List<SafeIdentifier>` | None |
+| `Query.limit()` / `offset()` | Negative values → bubble (CWE-20 defense) | None |
+| `changeset()` factory | Sealed `Changeset` interface — `ChangesetImpl` not exported | None |
+| `cast(allowedFields)` | Whitelist via `List<SafeIdentifier>` — prevents mass assignment (CWE-915) | None |
+| `validateRequired()` | Operates on `changes` Map — string checks only, no SQL | None |
+| `validateLength()` | Operates on `changes` Map — string checks only, no SQL | None |
+| `toInsertSql()` column names | Routed through `FieldDef.name` (`SafeIdentifier`), not raw map keys | None |
+| `toInsertSql()` values | `valueToSqlPart` — exhaustive type dispatch on sealed `FieldType` | None |
+| `toUpdateSql()` column names | Routed through `FieldDef.name` (`SafeIdentifier`) | None |
+| `toUpdateSql()` SET values | `valueToSqlPart` — same sealed type dispatch as INSERT | None |
+| `deleteSql()` table/PK | `SafeIdentifier` table name + hardcoded PK column + `SqlInt32` id value | None |
+
+The foundational layer establishes the two key invariants that all subsequent phases inherit: (1) identifiers are validated at construction and never raw, and (2) user values are type-dispatched through the sealed `SqlPart` hierarchy, never concatenated as strings. The `sql` template tag provides ergonomic access to these guarantees. 30+ test cases cover escaping, type rendering, edge cases (NaN, empty strings, Bobby Tables), and nesting.
+</details>
+
+<details>
 <summary><strong>Phase 1: JOIN</strong></summary>
 
 | Component | Type | Injection Risk |
