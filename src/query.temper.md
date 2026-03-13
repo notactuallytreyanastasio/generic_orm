@@ -126,20 +126,24 @@ typically done through `from()` and the builder methods.
       public limitVal: Int?,
       public offsetVal: Int?,
       public joinClauses: List<JoinClause>,
+      public groupByFields: List<SafeIdentifier>,
+      public havingConditions: List<WhereClause>,
+      public isDistinct: Boolean,
+      public selectExprs: List<SqlFragment>,
     ) {
 
       // where: AND condition — Ecto equivalent of `where/3`
       public where(condition: SqlFragment): Query {
         let nb = conditions.toListBuilder();
         nb.add(new AndCondition(condition));
-        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses)
+        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
       }
 
       // orWhere: OR condition — Ecto equivalent of `or_where/3`
       public orWhere(condition: SqlFragment): Query {
         let nb = conditions.toListBuilder();
         nb.add(new OrCondition(condition));
-        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses)
+        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
       }
 
       // whereNull: field IS NULL — Ecto equivalent of `is_nil/1` in where clause
@@ -220,33 +224,38 @@ typically done through `from()` and the builder methods.
 
       // select: field names must be SafeIdentifier values
       public select(fields: List<SafeIdentifier>): Query {
-        new Query(tableName, conditions, fields, orderClauses, limitVal, offsetVal, joinClauses)
+        new Query(tableName, conditions, fields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+      }
+
+      // selectExpr: expression-based SELECT for aggregates and computed columns
+      public selectExpr(exprs: List<SqlFragment>): Query {
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, exprs)
       }
 
       // orderBy
       public orderBy(field: SafeIdentifier, ascending: Boolean): Query {
         let nb = orderClauses.toListBuilder();
         nb.add(new OrderClause(field, ascending));
-        new Query(tableName, conditions, selectedFields, nb.toList(), limitVal, offsetVal, joinClauses)
+        new Query(tableName, conditions, selectedFields, nb.toList(), limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
       }
 
       // limit: bubbles on negative values
       public limit(n: Int): Query throws Bubble {
         if (n < 0) { bubble() }
-        new Query(tableName, conditions, selectedFields, orderClauses, n, offsetVal, joinClauses)
+        new Query(tableName, conditions, selectedFields, orderClauses, n, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
       }
 
       // offset: bubbles on negative values
       public offset(n: Int): Query throws Bubble {
         if (n < 0) { bubble() }
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, n, joinClauses)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, n, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
       }
 
       // join: generic join method
       public join(joinType: JoinType, table: SafeIdentifier, onCondition: SqlFragment): Query {
         let nb = joinClauses.toListBuilder();
         nb.add(new JoinClause(joinType, table, onCondition));
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, nb.toList())
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, nb.toList(), groupByFields, havingConditions, isDistinct, selectExprs)
       }
 
       // innerJoin
@@ -269,12 +278,49 @@ typically done through `from()` and the builder methods.
         join(new FullJoin(), table, onCondition)
       }
 
+      // groupBy: adds a GROUP BY field
+      public groupBy(field: SafeIdentifier): Query {
+        let nb = groupByFields.toListBuilder();
+        nb.add(field);
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, nb.toList(), havingConditions, isDistinct, selectExprs)
+      }
+
+      // having: AND condition on HAVING clause
+      public having(condition: SqlFragment): Query {
+        let nb = havingConditions.toListBuilder();
+        nb.add(new AndCondition(condition));
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, nb.toList(), isDistinct, selectExprs)
+      }
+
+      // orHaving: OR condition on HAVING clause
+      public orHaving(condition: SqlFragment): Query {
+        let nb = havingConditions.toListBuilder();
+        nb.add(new OrCondition(condition));
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, nb.toList(), isDistinct, selectExprs)
+      }
+
+      // distinct: enables SELECT DISTINCT
+      public distinct(): Query {
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, true, selectExprs)
+      }
+
       // toSql: assembles the final SqlFragment
       public toSql(): SqlFragment {
         let b = new SqlBuilder();
 
-        b.appendSafe("SELECT ");
-        if (selectedFields.isEmpty) {
+        if (isDistinct) {
+          b.appendSafe("SELECT DISTINCT ");
+        } else {
+          b.appendSafe("SELECT ");
+        }
+
+        if (!selectExprs.isEmpty) {
+          b.appendFragment(selectExprs[0]);
+          for (var i = 1; i < selectExprs.length; ++i) {
+            b.appendSafe(", ");
+            b.appendFragment(selectExprs[i]);
+          }
+        } else if (selectedFields.isEmpty) {
           b.appendSafe("*");
         } else {
           b.appendSafe(selectedFields.join(", ") { f => f.sqlValue });
@@ -303,6 +349,22 @@ typically done through `from()` and the builder methods.
           }
         }
 
+        if (!groupByFields.isEmpty) {
+          b.appendSafe(" GROUP BY ");
+          b.appendSafe(groupByFields.join(", ") { f => f.sqlValue });
+        }
+
+        if (!havingConditions.isEmpty) {
+          b.appendSafe(" HAVING ");
+          b.appendFragment(havingConditions[0].condition);
+          for (var i = 1; i < havingConditions.length; ++i) {
+            b.appendSafe(" ");
+            b.appendSafe(havingConditions[i].keyword());
+            b.appendSafe(" ");
+            b.appendFragment(havingConditions[i].condition);
+          }
+        }
+
         if (!orderClauses.isEmpty) {
           b.appendSafe(" ORDER BY ");
           var first = true;
@@ -328,6 +390,46 @@ typically done through `from()` and the builder methods.
         b.accumulated
       }
 
+      // countSql: SELECT COUNT(*) preserving WHERE, JOIN, GROUP BY, HAVING
+      public countSql(): SqlFragment {
+        let b = new SqlBuilder();
+        b.appendSafe("SELECT COUNT(*) FROM ");
+        b.appendSafe(tableName.sqlValue);
+        for (let jc of joinClauses) {
+          b.appendSafe(" ");
+          b.appendSafe(jc.joinType.keyword());
+          b.appendSafe(" ");
+          b.appendSafe(jc.table.sqlValue);
+          b.appendSafe(" ON ");
+          b.appendFragment(jc.onCondition);
+        }
+        if (!conditions.isEmpty) {
+          b.appendSafe(" WHERE ");
+          b.appendFragment(conditions[0].condition);
+          for (var i = 1; i < conditions.length; ++i) {
+            b.appendSafe(" ");
+            b.appendSafe(conditions[i].keyword());
+            b.appendSafe(" ");
+            b.appendFragment(conditions[i].condition);
+          }
+        }
+        if (!groupByFields.isEmpty) {
+          b.appendSafe(" GROUP BY ");
+          b.appendSafe(groupByFields.join(", ") { f => f.sqlValue });
+        }
+        if (!havingConditions.isEmpty) {
+          b.appendSafe(" HAVING ");
+          b.appendFragment(havingConditions[0].condition);
+          for (var i = 1; i < havingConditions.length; ++i) {
+            b.appendSafe(" ");
+            b.appendSafe(havingConditions[i].keyword());
+            b.appendSafe(" ");
+            b.appendFragment(havingConditions[i].condition);
+          }
+        }
+        b.accumulated
+      }
+
       // safeToSql: production-safe variant, applies defaultLimit if none set (CWE-400)
       public safeToSql(defaultLimit: Int): SqlFragment throws Bubble {
         if (defaultLimit < 0) { bubble() }
@@ -341,7 +443,7 @@ typically done through `from()` and the builder methods.
 Entry point. `tableName` must be a `SafeIdentifier`.
 
     export let from(tableName: SafeIdentifier): Query {
-      new Query(tableName, [], [], [], null, null, [])
+      new Query(tableName, [], [], [], null, null, [], [], [], false, [])
     }
 
 ## col
@@ -354,5 +456,57 @@ Qualified column reference helper. Both `table` and `column` must be
       b.appendSafe(table.sqlValue);
       b.appendSafe(".");
       b.appendSafe(column.sqlValue);
+      b.accumulated
+    }
+
+## Aggregate Functions
+
+Free functions producing `SqlFragment` values for use with `selectExpr()`
+and `having()`. Each uses `appendSafe` exclusively with hardcoded function
+names and `SafeIdentifier.sqlValue` for field names.
+
+    export let countAll(): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("COUNT(*)");
+      b.accumulated
+    }
+
+    export let countCol(field: SafeIdentifier): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("COUNT(");
+      b.appendSafe(field.sqlValue);
+      b.appendSafe(")");
+      b.accumulated
+    }
+
+    export let sumCol(field: SafeIdentifier): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("SUM(");
+      b.appendSafe(field.sqlValue);
+      b.appendSafe(")");
+      b.accumulated
+    }
+
+    export let avgCol(field: SafeIdentifier): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("AVG(");
+      b.appendSafe(field.sqlValue);
+      b.appendSafe(")");
+      b.accumulated
+    }
+
+    export let minCol(field: SafeIdentifier): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("MIN(");
+      b.appendSafe(field.sqlValue);
+      b.appendSafe(")");
+      b.accumulated
+    }
+
+    export let maxCol(field: SafeIdentifier): SqlFragment {
+      let b = new SqlBuilder();
+      b.appendSafe("MAX(");
+      b.appendSafe(field.sqlValue);
+      b.appendSafe(")");
       b.accumulated
     }

@@ -324,3 +324,151 @@
       let q = from(sid("users")).whereLike(sid("name"), "%son%");
       assert(q.toSql().toString() == "SELECT * FROM users WHERE name LIKE '%son%'") { "whereLike wildcard" };
     }
+
+    // --- Phase 2: Aggregation Tests ---
+
+    test("countAll produces COUNT(*)") {
+      let f = countAll();
+      assert(f.toString() == "COUNT(*)") { "countAll" };
+    }
+
+    test("countCol produces COUNT(field)") {
+      let f = countCol(sid("id"));
+      assert(f.toString() == "COUNT(id)") { "countCol" };
+    }
+
+    test("sumCol produces SUM(field)") {
+      let f = sumCol(sid("amount"));
+      assert(f.toString() == "SUM(amount)") { "sumCol" };
+    }
+
+    test("avgCol produces AVG(field)") {
+      let f = avgCol(sid("price"));
+      assert(f.toString() == "AVG(price)") { "avgCol" };
+    }
+
+    test("minCol produces MIN(field)") {
+      let f = minCol(sid("created_at"));
+      assert(f.toString() == "MIN(created_at)") { "minCol" };
+    }
+
+    test("maxCol produces MAX(field)") {
+      let f = maxCol(sid("score"));
+      assert(f.toString() == "MAX(score)") { "maxCol" };
+    }
+
+    test("selectExpr with aggregate") {
+      let q = from(sid("orders")).selectExpr([countAll()]);
+      assert(q.toSql().toString() == "SELECT COUNT(*) FROM orders") { "selectExpr count" };
+    }
+
+    test("selectExpr with multiple expressions") {
+      let nameFrag = col(sid("users"), sid("name"));
+      let q = from(sid("users")).selectExpr([nameFrag, countAll()]);
+      assert(q.toSql().toString() == "SELECT users.name, COUNT(*) FROM users") { "selectExpr multi" };
+    }
+
+    test("selectExpr overrides selectedFields") {
+      let q = from(sid("users"))
+        .select([sid("id"), sid("name")])
+        .selectExpr([countAll()]);
+      assert(q.toSql().toString() == "SELECT COUNT(*) FROM users") { "selectExpr overrides select" };
+    }
+
+    test("groupBy single field") {
+      let q = from(sid("orders"))
+        .selectExpr([col(sid("orders"), sid("status")), countAll()])
+        .groupBy(sid("status"));
+      assert(
+        q.toSql().toString() == "SELECT orders.status, COUNT(*) FROM orders GROUP BY status"
+      ) { "groupBy single" };
+    }
+
+    test("groupBy multiple fields") {
+      let q = from(sid("orders"))
+        .groupBy(sid("status"))
+        .groupBy(sid("category"));
+      assert(
+        q.toSql().toString() == "SELECT * FROM orders GROUP BY status, category"
+      ) { "groupBy multiple" };
+    }
+
+    test("having basic") {
+      let q = from(sid("orders"))
+        .selectExpr([col(sid("orders"), sid("status")), countAll()])
+        .groupBy(sid("status"))
+        .having(sql"COUNT(*) > ${5}");
+      assert(
+        q.toSql().toString() == "SELECT orders.status, COUNT(*) FROM orders GROUP BY status HAVING COUNT(*) > 5"
+      ) { "having basic" };
+    }
+
+    test("orHaving") {
+      let q = from(sid("orders"))
+        .groupBy(sid("status"))
+        .having(sql"COUNT(*) > ${5}")
+        .orHaving(sql"SUM(total) > ${1000}");
+      assert(
+        q.toSql().toString() == "SELECT * FROM orders GROUP BY status HAVING COUNT(*) > 5 OR SUM(total) > 1000"
+      ) { "orHaving" };
+    }
+
+    test("distinct basic") {
+      let q = from(sid("users")).select([sid("name")]).distinct();
+      assert(q.toSql().toString() == "SELECT DISTINCT name FROM users") { "distinct" };
+    }
+
+    test("distinct with where") {
+      let q = from(sid("users"))
+        .select([sid("email")])
+        .where(sql"active = ${true}")
+        .distinct();
+      assert(
+        q.toSql().toString() == "SELECT DISTINCT email FROM users WHERE active = TRUE"
+      ) { "distinct with where" };
+    }
+
+    test("countSql bare") {
+      let q = from(sid("users"));
+      assert(q.countSql().toString() == "SELECT COUNT(*) FROM users") { "countSql bare" };
+    }
+
+    test("countSql with WHERE") {
+      let q = from(sid("users")).where(sql"active = ${true}");
+      assert(
+        q.countSql().toString() == "SELECT COUNT(*) FROM users WHERE active = TRUE"
+      ) { "countSql with where" };
+    }
+
+    test("countSql with JOIN") {
+      let q = from(sid("users"))
+        .innerJoin(sid("orders"), sql"users.id = orders.user_id")
+        .where(sql"orders.total > ${100}");
+      assert(
+        q.countSql().toString() == "SELECT COUNT(*) FROM users INNER JOIN orders ON users.id = orders.user_id WHERE orders.total > 100"
+      ) { "countSql with join" };
+    }
+
+    test("countSql drops orderBy/limit/offset") {
+      let q = do {
+        from(sid("users"))
+          .where(sql"active = ${true}")
+          .orderBy(sid("name"), true)
+          .limit(10)
+          .offset(20)
+      } orelse panic();
+      let s = q.countSql().toString();
+      assert(s == "SELECT COUNT(*) FROM users WHERE active = TRUE") { "countSql drops extras: ${s}" };
+    }
+
+    test("full aggregation query") {
+      let q = from(sid("orders"))
+        .selectExpr([col(sid("orders"), sid("status")), countAll(), sumCol(sid("total"))])
+        .innerJoin(sid("users"), sql"orders.user_id = users.id")
+        .where(sql"users.active = ${true}")
+        .groupBy(sid("status"))
+        .having(sql"COUNT(*) > ${3}")
+        .orderBy(sid("status"), true);
+      let expected = "SELECT orders.status, COUNT(*), SUM(total) FROM orders INNER JOIN users ON orders.user_id = users.id WHERE users.active = TRUE GROUP BY status HAVING COUNT(*) > 3 ORDER BY status ASC";
+      assert(q.toSql().toString() == expected) { "full aggregation" };
+    }

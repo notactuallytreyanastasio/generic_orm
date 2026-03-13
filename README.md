@@ -105,6 +105,10 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 
 **Field types:** `StringField`, `IntField`, `Int64Field`, `FloatField`, `BoolField`, `DateField`
 
+**Query features:** `where`, `orWhere`, `whereNull`, `whereNotNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`, `select`, `selectExpr`, `orderBy`, `limit`, `offset`, `join`, `groupBy`, `having`, `orHaving`, `distinct`, `countSql`, `safeToSql`
+
+**Aggregate functions:** `countAll`, `countCol`, `sumCol`, `avgCol`, `minCol`, `maxCol`
+
 **Changeset validations:** `validateRequired`, `validateLength`, `validateInt`, `validateInt64`, `validateFloat`, `validateBool`
 
 ### Source Files
@@ -468,7 +472,7 @@ Three of the four ORM-level findings were fixed in the Temper source, rebuilt ac
 - `SqlFloat64 negative Infinity renders as NULL`
 - `SqlFloat64 normal values still work`
 
-All 85 tests pass across the full suite (64 previous + 21 WHERE clause enrichment tests).
+All 105 tests pass across the full suite (85 previous + 20 aggregation tests).
 
 #### Summary
 
