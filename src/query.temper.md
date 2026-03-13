@@ -57,27 +57,69 @@ SQL keyword string — no user input reaches the keyword.
       public keyword(): String { "FULL OUTER JOIN" }
     }
 
+    export class CrossJoin() extends JoinType {
+      // keyword
+      public keyword(): String { "CROSS JOIN" }
+    }
+
 ## JoinClause
 
-Associates a join type, target table, and ON condition. All three components
-are type-safe: `JoinType` is sealed (hardcoded keywords), `table` is a
-`SafeIdentifier`, and `onCondition` is an `SqlFragment`.
+Associates a join type, target table, and optional ON condition. `onCondition`
+is nullable to support CROSS JOIN which has no ON clause.
 
     export class JoinClause(
       public joinType: JoinType,
       public table: SafeIdentifier,
-      public onCondition: SqlFragment,
+      public onCondition: SqlFragment?,
     ) {}
+
+## NullsPosition
+
+Controls NULL ordering in ORDER BY. Each implementation returns a hardcoded
+SQL clause — no user input reaches the keyword.
+
+    export sealed interface NullsPosition {
+      public keyword(): String;
+    }
+
+    export class NullsFirst() extends NullsPosition {
+      // keyword
+      public keyword(): String { " NULLS FIRST" }
+    }
+
+    export class NullsLast() extends NullsPosition {
+      // keyword
+      public keyword(): String { " NULLS LAST" }
+    }
 
 ## OrderClause
 
-Associates a field with a sort direction. `field` is a `SafeIdentifier`,
-`ascending` selects between hardcoded `ASC`/`DESC` keywords.
+Associates a field with a sort direction and optional nulls position.
 
     export class OrderClause(
       public field: SafeIdentifier,
       public ascending: Boolean,
+      public nullsPos: NullsPosition?,
     ) {}
+
+## LockMode
+
+Row-level locking for SELECT queries. Each implementation returns a hardcoded
+SQL clause appended after LIMIT/OFFSET.
+
+    export sealed interface LockMode {
+      public keyword(): String;
+    }
+
+    export class ForUpdate() extends LockMode {
+      // keyword
+      public keyword(): String { " FOR UPDATE" }
+    }
+
+    export class ForShare() extends LockMode {
+      // keyword
+      public keyword(): String { " FOR SHARE" }
+    }
 
 ## WhereClause
 
@@ -130,20 +172,21 @@ typically done through `from()` and the builder methods.
       public havingConditions: List<WhereClause>,
       public isDistinct: Boolean,
       public selectExprs: List<SqlFragment>,
+      public lockMode: LockMode?,
     ) {
 
       // where: AND condition — Ecto equivalent of `where/3`
       public where(condition: SqlFragment): Query {
         let nb = conditions.toListBuilder();
         nb.add(new AndCondition(condition));
-        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // orWhere: OR condition — Ecto equivalent of `or_where/3`
       public orWhere(condition: SqlFragment): Query {
         let nb = conditions.toListBuilder();
         nb.add(new OrCondition(condition));
-        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // whereNull: field IS NULL — Ecto equivalent of `is_nil/1` in where clause
@@ -234,38 +277,45 @@ typically done through `from()` and the builder methods.
 
       // select: field names must be SafeIdentifier values
       public select(fields: List<SafeIdentifier>): Query {
-        new Query(tableName, conditions, fields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+        new Query(tableName, conditions, fields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // selectExpr: expression-based SELECT for aggregates and computed columns
       public selectExpr(exprs: List<SqlFragment>): Query {
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, exprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, exprs, lockMode)
       }
 
       // orderBy
       public orderBy(field: SafeIdentifier, ascending: Boolean): Query {
         let nb = orderClauses.toListBuilder();
-        nb.add(new OrderClause(field, ascending));
-        new Query(tableName, conditions, selectedFields, nb.toList(), limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+        nb.add(new OrderClause(field, ascending, null));
+        new Query(tableName, conditions, selectedFields, nb.toList(), limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
+      }
+
+      // orderByNulls: ORDER BY with NULLS FIRST/LAST
+      public orderByNulls(field: SafeIdentifier, ascending: Boolean, nulls: NullsPosition): Query {
+        let nb = orderClauses.toListBuilder();
+        nb.add(new OrderClause(field, ascending, nulls));
+        new Query(tableName, conditions, selectedFields, nb.toList(), limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // limit: bubbles on negative values
       public limit(n: Int): Query throws Bubble {
         if (n < 0) { bubble() }
-        new Query(tableName, conditions, selectedFields, orderClauses, n, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, n, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // offset: bubbles on negative values
       public offset(n: Int): Query throws Bubble {
         if (n < 0) { bubble() }
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, n, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, n, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // join: generic join method
       public join(joinType: JoinType, table: SafeIdentifier, onCondition: SqlFragment): Query {
         let nb = joinClauses.toListBuilder();
         nb.add(new JoinClause(joinType, table, onCondition));
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, nb.toList(), groupByFields, havingConditions, isDistinct, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, nb.toList(), groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // innerJoin
@@ -288,30 +338,42 @@ typically done through `from()` and the builder methods.
         join(new FullJoin(), table, onCondition)
       }
 
+      // crossJoin: CROSS JOIN with no ON condition
+      public crossJoin(table: SafeIdentifier): Query {
+        let nb = joinClauses.toListBuilder();
+        nb.add(new JoinClause(new CrossJoin(), table, null));
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, nb.toList(), groupByFields, havingConditions, isDistinct, selectExprs, lockMode)
+      }
+
       // groupBy: adds a GROUP BY field
       public groupBy(field: SafeIdentifier): Query {
         let nb = groupByFields.toListBuilder();
         nb.add(field);
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, nb.toList(), havingConditions, isDistinct, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, nb.toList(), havingConditions, isDistinct, selectExprs, lockMode)
       }
 
       // having: AND condition on HAVING clause
       public having(condition: SqlFragment): Query {
         let nb = havingConditions.toListBuilder();
         nb.add(new AndCondition(condition));
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, nb.toList(), isDistinct, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, nb.toList(), isDistinct, selectExprs, lockMode)
       }
 
       // orHaving: OR condition on HAVING clause
       public orHaving(condition: SqlFragment): Query {
         let nb = havingConditions.toListBuilder();
         nb.add(new OrCondition(condition));
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, nb.toList(), isDistinct, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, nb.toList(), isDistinct, selectExprs, lockMode)
       }
 
       // distinct: enables SELECT DISTINCT
       public distinct(): Query {
-        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, true, selectExprs)
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, true, selectExprs, lockMode)
+      }
+
+      // lock: adds row-level locking (FOR UPDATE / FOR SHARE)
+      public lock(mode: LockMode): Query {
+        new Query(tableName, conditions, selectedFields, orderClauses, limitVal, offsetVal, joinClauses, groupByFields, havingConditions, isDistinct, selectExprs, mode)
       }
 
       // toSql: assembles the final SqlFragment
@@ -344,8 +406,11 @@ typically done through `from()` and the builder methods.
           b.appendSafe(jc.joinType.keyword());
           b.appendSafe(" ");
           b.appendSafe(jc.table.sqlValue);
-          b.appendSafe(" ON ");
-          b.appendFragment(jc.onCondition);
+          let oc = jc.onCondition;
+          if (oc != null) {
+            b.appendSafe(" ON ");
+            b.appendFragment(oc);
+          }
         }
 
         if (!conditions.isEmpty) {
@@ -378,11 +443,15 @@ typically done through `from()` and the builder methods.
         if (!orderClauses.isEmpty) {
           b.appendSafe(" ORDER BY ");
           var first = true;
-          for (let oc of orderClauses) {
+          for (let orc of orderClauses) {
             if (!first) { b.appendSafe(", "); }
             first = false;
-            b.appendSafe(oc.field.sqlValue);
-            b.appendSafe(if (oc.ascending) { " ASC" } else { " DESC" });
+            b.appendSafe(orc.field.sqlValue);
+            b.appendSafe(if (orc.ascending) { " ASC" } else { " DESC" });
+            let np = orc.nullsPos;
+            if (np != null) {
+              b.appendSafe(np.keyword());
+            }
           }
         }
 
@@ -395,6 +464,11 @@ typically done through `from()` and the builder methods.
         if (ov != null) {
           b.appendSafe(" OFFSET ");
           b.appendInt32(ov);
+        }
+
+        let lm = lockMode;
+        if (lm != null) {
+          b.appendSafe(lm.keyword());
         }
 
         b.accumulated
@@ -410,8 +484,11 @@ typically done through `from()` and the builder methods.
           b.appendSafe(jc.joinType.keyword());
           b.appendSafe(" ");
           b.appendSafe(jc.table.sqlValue);
-          b.appendSafe(" ON ");
-          b.appendFragment(jc.onCondition);
+          let oc2 = jc.onCondition;
+          if (oc2 != null) {
+            b.appendSafe(" ON ");
+            b.appendFragment(oc2);
+          }
         }
         if (!conditions.isEmpty) {
           b.appendSafe(" WHERE ");
@@ -453,7 +530,7 @@ typically done through `from()` and the builder methods.
 Entry point. `tableName` must be a `SafeIdentifier`.
 
     export let from(tableName: SafeIdentifier): Query {
-      new Query(tableName, [], [], [], null, null, [], [], [], false, [])
+      new Query(tableName, [], [], [], null, null, [], [], [], false, [], null)
     }
 
 ## col

@@ -664,3 +664,62 @@
       } orelse panic();
       assert(q.toString() == "DELETE FROM logs WHERE level = 'debug' LIMIT 1000") { "delete limit" };
     }
+
+    // --- Phase 5: Extended Query Features Tests ---
+
+    test("orderByNulls NULLS FIRST") {
+      let q = from(sid("users")).orderByNulls(sid("email"), true, new NullsFirst());
+      assert(q.toSql().toString() == "SELECT * FROM users ORDER BY email ASC NULLS FIRST") { "nulls first" };
+    }
+
+    test("orderByNulls NULLS LAST") {
+      let q = from(sid("users")).orderByNulls(sid("score"), false, new NullsLast());
+      assert(q.toSql().toString() == "SELECT * FROM users ORDER BY score DESC NULLS LAST") { "nulls last" };
+    }
+
+    test("mixed orderBy and orderByNulls") {
+      let q = from(sid("users"))
+        .orderBy(sid("name"), true)
+        .orderByNulls(sid("email"), true, new NullsFirst());
+      assert(
+        q.toSql().toString() == "SELECT * FROM users ORDER BY name ASC, email ASC NULLS FIRST"
+      ) { "mixed order" };
+    }
+
+    test("crossJoin") {
+      let q = from(sid("users")).crossJoin(sid("colors"));
+      assert(q.toSql().toString() == "SELECT * FROM users CROSS JOIN colors") { "cross join" };
+    }
+
+    test("crossJoin combined with other joins") {
+      let q = from(sid("users"))
+        .innerJoin(sid("orders"), sql"users.id = orders.user_id")
+        .crossJoin(sid("colors"));
+      assert(
+        q.toSql().toString() == "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id CROSS JOIN colors"
+      ) { "cross + inner join" };
+    }
+
+    test("lock FOR UPDATE") {
+      let q = from(sid("users"))
+        .where(sql"id = ${1}")
+        .lock(new ForUpdate());
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE id = 1 FOR UPDATE") { "for update" };
+    }
+
+    test("lock FOR SHARE") {
+      let q = from(sid("users"))
+        .select([sid("name")])
+        .lock(new ForShare());
+      assert(q.toSql().toString() == "SELECT name FROM users FOR SHARE") { "for share" };
+    }
+
+    test("lock with full query") {
+      let q = do {
+        from(sid("accounts"))
+          .where(sql"id = ${42}")
+          .limit(1)
+          .lock(new ForUpdate())
+      } orelse panic();
+      assert(q.toSql().toString() == "SELECT * FROM accounts WHERE id = 42 LIMIT 1 FOR UPDATE") { "lock full query" };
+    }
