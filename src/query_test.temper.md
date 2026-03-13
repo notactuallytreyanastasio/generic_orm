@@ -181,3 +181,146 @@
         q.toSql().toString() == "SELECT * FROM users INNER JOIN orders ON users.id = orders.user_id"
       ) { "join with col" };
     }
+
+    // --- Phase 1: WHERE Clause Enrichment Tests ---
+
+    test("orWhere basic") {
+      let q = from(sid("users")).orWhere(sql"status = ${"active"}");
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE status = 'active'") { "orWhere basic" };
+    }
+
+    test("where then orWhere") {
+      let q = from(sid("users"))
+        .where(sql"age > ${18}")
+        .orWhere(sql"vip = ${true}");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE age > 18 OR vip = TRUE"
+      ) { "where then orWhere" };
+    }
+
+    test("multiple orWhere") {
+      let q = from(sid("users"))
+        .where(sql"active = ${true}")
+        .orWhere(sql"role = ${"admin"}")
+        .orWhere(sql"role = ${"moderator"}");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE active = TRUE OR role = 'admin' OR role = 'moderator'"
+      ) { "multiple orWhere" };
+    }
+
+    test("mixed where and orWhere") {
+      let q = from(sid("users"))
+        .where(sql"age > ${18}")
+        .where(sql"active = ${true}")
+        .orWhere(sql"vip = ${true}");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE age > 18 AND active = TRUE OR vip = TRUE"
+      ) { "mixed where and orWhere" };
+    }
+
+    test("whereNull") {
+      let q = from(sid("users")).whereNull(sid("deleted_at"));
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE deleted_at IS NULL") { "whereNull" };
+    }
+
+    test("whereNotNull") {
+      let q = from(sid("users")).whereNotNull(sid("email"));
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE email IS NOT NULL") { "whereNotNull" };
+    }
+
+    test("whereNull chained with where") {
+      let q = from(sid("users"))
+        .where(sql"active = ${true}")
+        .whereNull(sid("deleted_at"));
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE active = TRUE AND deleted_at IS NULL"
+      ) { "whereNull chained" };
+    }
+
+    test("whereNotNull chained with orWhere") {
+      let q = from(sid("users"))
+        .whereNull(sid("deleted_at"))
+        .orWhere(sql"role = ${"admin"}");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE deleted_at IS NULL OR role = 'admin'"
+      ) { "whereNotNull with orWhere" };
+    }
+
+    test("whereIn with int values") {
+      let q = from(sid("users")).whereIn(sid("id"), [new SqlInt32(1), new SqlInt32(2), new SqlInt32(3)]);
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE id IN (1, 2, 3)") { "whereIn ints" };
+    }
+
+    test("whereIn with string values escaping") {
+      let q = from(sid("users")).whereIn(sid("name"), [new SqlString("Alice"), new SqlString("Bob's")]);
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE name IN ('Alice', 'Bob''s')") { "whereIn strings" };
+    }
+
+    test("whereIn with empty list produces 1=0") {
+      let q = from(sid("users")).whereIn(sid("id"), []);
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE 1 = 0") { "whereIn empty" };
+    }
+
+    test("whereIn chained") {
+      let q = from(sid("users"))
+        .where(sql"active = ${true}")
+        .whereIn(sid("role"), [new SqlString("admin"), new SqlString("user")]);
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE active = TRUE AND role IN ('admin', 'user')"
+      ) { "whereIn chained" };
+    }
+
+    test("whereIn single element") {
+      let q = from(sid("users")).whereIn(sid("id"), [new SqlInt32(42)]);
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE id IN (42)") { "whereIn single" };
+    }
+
+    test("whereNot basic") {
+      let q = from(sid("users")).whereNot(sql"active = ${true}");
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE NOT (active = TRUE)") { "whereNot" };
+    }
+
+    test("whereNot chained") {
+      let q = from(sid("users"))
+        .where(sql"age > ${18}")
+        .whereNot(sql"banned = ${true}");
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE age > 18 AND NOT (banned = TRUE)"
+      ) { "whereNot chained" };
+    }
+
+    test("whereBetween integers") {
+      let q = from(sid("users")).whereBetween(sid("age"), new SqlInt32(18), new SqlInt32(65));
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE age BETWEEN 18 AND 65") { "whereBetween ints" };
+    }
+
+    test("whereBetween chained") {
+      let q = from(sid("users"))
+        .where(sql"active = ${true}")
+        .whereBetween(sid("age"), new SqlInt32(21), new SqlInt32(30));
+      assert(
+        q.toSql().toString() == "SELECT * FROM users WHERE active = TRUE AND age BETWEEN 21 AND 30"
+      ) { "whereBetween chained" };
+    }
+
+    test("whereLike basic") {
+      let q = from(sid("users")).whereLike(sid("name"), "John%");
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE name LIKE 'John%'") { "whereLike" };
+    }
+
+    test("whereILike basic") {
+      let q = from(sid("users")).whereILike(sid("email"), "%@gmail.com");
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE email ILIKE '%@gmail.com'") { "whereILike" };
+    }
+
+    test("whereLike with injection attempt") {
+      let q = from(sid("users")).whereLike(sid("name"), "'; DROP TABLE users; --");
+      let s = q.toSql().toString();
+      assert(s.indexOf("''") is StringIndex) { "like injection escaped: ${s}" };
+      assert(s.indexOf("LIKE") is StringIndex) { "like structure intact: ${s}" };
+    }
+
+    test("whereLike wildcard patterns") {
+      let q = from(sid("users")).whereLike(sid("name"), "%son%");
+      assert(q.toSql().toString() == "SELECT * FROM users WHERE name LIKE '%son%'") { "whereLike wildcard" };
+    }

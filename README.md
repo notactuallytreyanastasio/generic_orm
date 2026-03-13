@@ -68,7 +68,7 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 
 - **`Changeset`** — The [changeset pipeline](src/changeset.temper.md) follows Ecto's cast-then-validate pattern. `Changeset` is a *sealed interface* — `ChangesetImpl` is not exported, so the only construction path is through the `changeset()` factory. Raw `params` are never exposed; only whitelisted `changes` are readable. `cast()` requires `List<SafeIdentifier>` for field whitelisting. `toInsertSql()` independently enforces non-nullable fields. Type dispatch uses exhaustive `when` on the sealed `FieldType` union.
 
-- **`Query`** — The [query builder](src/query.temper.md) requires `SafeIdentifier` for table names, selected fields, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` provides CWE-400 protection by enforcing a result set size limit. JOIN type keywords are hardcoded from a sealed `JoinType` interface. The `col()` helper produces qualified column references (`table.column`) from two `SafeIdentifier` values.
+- **`Query`** — The [query builder](src/query.temper.md) requires `SafeIdentifier` for table names, selected fields, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` provides CWE-400 protection by enforcing a result set size limit. JOIN type keywords are hardcoded from a sealed `JoinType` interface. WHERE conditions are wrapped in a sealed `WhereClause` interface (`AndCondition`/`OrCondition`) enabling mixed AND/OR logic. Convenience methods (`whereNull`, `whereNotNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`) build SQL fragments internally using only validated identifiers and typed values — no raw strings reach `appendSafe`. The `col()` helper produces qualified column references (`table.column`) from two `SafeIdentifier` values.
 
 ### Core API
 
@@ -80,6 +80,13 @@ The ORM is built on a defense-in-depth approach to SQL injection prevention, usi
 │                                                         │
 │  from(safeId)                                           │
 │    .where(sqlFragment)                                  │
+│    .orWhere(sqlFragment)                                │
+│    .whereNull(safeId) / .whereNotNull(safeId)           │
+│    .whereIn(safeId, sqlParts)                           │
+│    .whereNot(sqlFragment)                               │
+│    .whereBetween(safeId, low, high)                     │
+│    .whereLike(safeId, pattern)                           │
+│    .whereILike(safeId, pattern)                          │
 │    .orderBy(safeId, ascending)                          │
 │    .limit(n)                                            │
 │    .toSql()  →  SqlFragment                             │
@@ -107,7 +114,7 @@ All source lives in [`src/`](src/) as Temper literate markdown (`.temper.md`):
 | File | Purpose |
 |------|---------|
 | [`schema.temper.md`](src/schema.temper.md) | `SafeIdentifier`, `FieldType`, `FieldDef`, `TableDef` |
-| [`query.temper.md`](src/query.temper.md) | `Query`, `from()`, `OrderClause`, `JoinType`, `JoinClause`, `col()` |
+| [`query.temper.md`](src/query.temper.md) | `Query`, `from()`, `WhereClause`, `AndCondition`, `OrCondition`, `OrderClause`, `JoinType`, `JoinClause`, `col()` |
 | [`changeset.temper.md`](src/changeset.temper.md) | `Changeset`, `changeset()`, cast/validate/SQL pipeline |
 | [`orm.temper.md`](src/orm.temper.md) | `deleteSql()` top-level helper |
 | [`sql_builder.temper.md`](src/sql_builder.temper.md) | `SqlBuilder`, `sql` tag |
@@ -345,7 +352,7 @@ There is no `appendRaw` or bypass method. The only way to get unescaped content 
 
 **Layer 5: Query builder (CWE-89, CWE-400)**
 
-[`Query`](src/query.temper.md) requires `SafeIdentifier` for table names, column selections, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` enforces result set bounds (CWE-400). JOIN type keywords (`INNER JOIN`, `LEFT JOIN`, etc.) are hardcoded from a sealed `JoinType` interface with exactly 4 implementations — no user input can influence the keyword.
+[`Query`](src/query.temper.md) requires `SafeIdentifier` for table names, column selections, ORDER BY clauses, and JOIN table names. WHERE and ON conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` enforces result set bounds (CWE-400). JOIN type keywords (`INNER JOIN`, `LEFT JOIN`, etc.) are hardcoded from a sealed `JoinType` interface with exactly 4 implementations — no user input can influence the keyword. WHERE conditions are wrapped in a sealed `WhereClause` interface (`AndCondition`/`OrCondition`), and convenience methods (`whereNull`, `whereIn`, `whereNot`, `whereBetween`, `whereLike`, `whereILike`) build fragments internally using only `SafeIdentifier` field names and `SqlPart`/`SqlString` values.
 
 ### ORM-Level Findings
 
@@ -461,7 +468,7 @@ Three of the four ORM-level findings were fixed in the Temper source, rebuilt ac
 - `SqlFloat64 negative Infinity renders as NULL`
 - `SqlFloat64 normal values still work`
 
-All 64 tests pass across the full suite (56 original + 4 float tests + 4 additional, plus 8 JOIN tests).
+All 85 tests pass across the full suite (64 previous + 21 WHERE clause enrichment tests).
 
 #### Summary
 
@@ -527,6 +534,27 @@ The ORM's JOIN support (added 2026-03-13) follows the same security model as the
 - ON conditions use the same `SqlFragment` type as WHERE conditions
 - `toSql()` renders JOINs using only `appendSafe` (literals/identifiers) and `appendFragment` (structured parts)
 - 8 dedicated test cases verify all join types, chaining, composition, and the `col()` helper
+
+### WHERE Clause Enrichment Security Analysis
+
+The ORM's WHERE clause enrichment (Phase 1) adds OR logic, NULL checks, IN, NOT, BETWEEN, and LIKE/ILIKE operators. All follow the same safety model:
+
+| Component | Type | Injection Risk |
+|-----------|------|----------------|
+| `WhereClause.keyword()` | Sealed interface — hardcoded `"AND"` or `"OR"` | None |
+| `whereNull` / `whereNotNull` | `SafeIdentifier` field + hardcoded `IS NULL` / `IS NOT NULL` | None |
+| `whereIn` values | `List<SqlPart>` — type-dispatched escaping per element | None |
+| `whereIn` empty list | Hardcoded `1 = 0` — always-false degenerate case | None |
+| `whereNot` condition | `SqlFragment` wrapped in hardcoded `NOT (...)` | None |
+| `whereBetween` bounds | `SqlPart` values — type-dispatched rendering | None |
+| `whereLike` / `whereILike` pattern | `String` → `SqlString` — single-quote escaping | None |
+
+**Key properties:**
+- `WhereClause` is sealed — no external subclass can return a malicious keyword
+- All convenience methods delegate to `this.where()` which wraps in `AndCondition`
+- LIKE/ILIKE patterns go through `SqlString` escaping (single-quote doubling)
+- Empty IN list produces `1 = 0` rather than invalid SQL syntax
+- 21 dedicated test cases verify all operators, chaining, mixed AND/OR logic, and injection attempts
 
 ---
 

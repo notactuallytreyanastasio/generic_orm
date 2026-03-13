@@ -16,6 +16,12 @@ Composable, immutable SELECT query builder.
   raw `String`.
 - `safeToSql(defaultLimit)` is provided as the production-safe variant
   that always applies an upper bound on result set size (CWE-400).
+- `orWhere()` follows the same safety model as `where()` — it accepts
+  only `SqlFragment` arguments, ensuring user data is always escaped.
+- Convenience methods (`whereNull`, `whereNotNull`, `whereIn`, `whereNot`,
+  `whereBetween`, `whereLike`, `whereILike`) build SQL fragments internally
+  using only `SafeIdentifier` for field names and `SqlPart`/`SqlString`
+  for values — no raw strings reach `appendSafe`.
 
 ## Imports
 
@@ -23,6 +29,9 @@ All types (SqlFragment, SqlBuilder, sql, SafeIdentifier) are available
 from other files in the same module without explicit imports.
 
 ## JoinType
+
+Sealed interface for JOIN keywords. Each implementation returns a hardcoded
+SQL keyword string — no user input reaches the keyword.
 
     export sealed interface JoinType {
       public keyword(): String;
@@ -50,6 +59,10 @@ from other files in the same module without explicit imports.
 
 ## JoinClause
 
+Associates a join type, target table, and ON condition. All three components
+are type-safe: `JoinType` is sealed (hardcoded keywords), `table` is a
+`SafeIdentifier`, and `onCondition` is an `SqlFragment`.
+
     export class JoinClause(
       public joinType: JoinType,
       public table: SafeIdentifier,
@@ -58,16 +71,56 @@ from other files in the same module without explicit imports.
 
 ## OrderClause
 
+Associates a field with a sort direction. `field` is a `SafeIdentifier`,
+`ascending` selects between hardcoded `ASC`/`DESC` keywords.
+
     export class OrderClause(
       public field: SafeIdentifier,
       public ascending: Boolean,
     ) {}
 
+## WhereClause
+
+Ecto equivalent: `Ecto.Query.where/3` with `:and` / `:or` composition.
+
+Each WHERE condition is tagged as either AND or OR, enabling mixed boolean
+logic in the WHERE clause. The first condition is always rendered bare
+(without a conjunction keyword); subsequent conditions are prefixed with
+their `keyword()` — either `"AND"` or `"OR"`.
+
+The `keyword()` method follows the same pattern as `JoinType.keyword()`:
+a sealed interface with hardcoded string returns, ensuring only valid SQL
+keywords are emitted. The `condition` getter exposes the underlying
+`SqlFragment` for SQL rendering.
+
+    export sealed interface WhereClause {
+      public get condition(): SqlFragment;
+      public keyword(): String;
+    }
+
+    export class AndCondition(private _condition: SqlFragment) extends WhereClause {
+      // condition
+      public get condition(): SqlFragment { _condition }
+      // keyword
+      public keyword(): String { "AND" }
+    }
+
+    export class OrCondition(private _condition: SqlFragment) extends WhereClause {
+      // condition
+      public get condition(): SqlFragment { _condition }
+      // keyword
+      public keyword(): String { "OR" }
+    }
+
 ## Query
+
+Immutable query builder. Every mutation method returns a new `Query` instance.
+The constructor fields are public to enable inspection, but construction is
+typically done through `from()` and the builder methods.
 
     export class Query(
       public tableName: SafeIdentifier,
-      public conditions: List<SqlFragment>,
+      public conditions: List<WhereClause>,
       public selectedFields: List<SafeIdentifier>,
       public orderClauses: List<OrderClause>,
       public limitVal: Int?,
@@ -75,11 +128,94 @@ from other files in the same module without explicit imports.
       public joinClauses: List<JoinClause>,
     ) {
 
-      // where: condition must be a SqlFragment built via the sql tag
+      // where: AND condition — Ecto equivalent of `where/3`
       public where(condition: SqlFragment): Query {
         let nb = conditions.toListBuilder();
-        nb.add(condition);
+        nb.add(new AndCondition(condition));
         new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses)
+      }
+
+      // orWhere: OR condition — Ecto equivalent of `or_where/3`
+      public orWhere(condition: SqlFragment): Query {
+        let nb = conditions.toListBuilder();
+        nb.add(new OrCondition(condition));
+        new Query(tableName, nb.toList(), selectedFields, orderClauses, limitVal, offsetVal, joinClauses)
+      }
+
+      // whereNull: field IS NULL — Ecto equivalent of `is_nil/1` in where clause
+      public whereNull(field: SafeIdentifier): Query {
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" IS NULL");
+        this.where(b.accumulated)
+      }
+
+      // whereNotNull: field IS NOT NULL
+      public whereNotNull(field: SafeIdentifier): Query {
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" IS NOT NULL");
+        this.where(b.accumulated)
+      }
+
+      // whereIn: field IN (values) — empty list yields 1 = 0 (safe degenerate)
+      // Ecto equivalent of `where(q, [r], r.field in ^values)`
+      public whereIn(field: SafeIdentifier, values: List<SqlPart>): Query {
+        if (values.isEmpty) {
+          let b = new SqlBuilder();
+          b.appendSafe("1 = 0");
+          return this.where(b.accumulated);
+        }
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" IN (");
+        b.appendPart(values[0]);
+        for (var i = 1; i < values.length; ++i) {
+          b.appendSafe(", ");
+          b.appendPart(values[i]);
+        }
+        b.appendSafe(")");
+        this.where(b.accumulated)
+      }
+
+      // whereNot: NOT (condition) — Ecto equivalent of `not/1`
+      public whereNot(condition: SqlFragment): Query {
+        let b = new SqlBuilder();
+        b.appendSafe("NOT (");
+        b.appendFragment(condition);
+        b.appendSafe(")");
+        this.where(b.accumulated)
+      }
+
+      // whereBetween: field BETWEEN low AND high
+      public whereBetween(field: SafeIdentifier, low: SqlPart, high: SqlPart): Query {
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" BETWEEN ");
+        b.appendPart(low);
+        b.appendSafe(" AND ");
+        b.appendPart(high);
+        this.where(b.accumulated)
+      }
+
+      // whereLike: field LIKE 'pattern' — pattern goes through SqlString escaping
+      // Ecto equivalent of `like/2`
+      public whereLike(field: SafeIdentifier, pattern: String): Query {
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" LIKE ");
+        b.appendString(pattern);
+        this.where(b.accumulated)
+      }
+
+      // whereILike: field ILIKE 'pattern' — case-insensitive LIKE (PostgreSQL)
+      // Ecto equivalent of `ilike/2`
+      public whereILike(field: SafeIdentifier, pattern: String): Query {
+        let b = new SqlBuilder();
+        b.appendSafe(field.sqlValue);
+        b.appendSafe(" ILIKE ");
+        b.appendString(pattern);
+        this.where(b.accumulated)
       }
 
       // select: field names must be SafeIdentifier values
@@ -158,10 +294,12 @@ from other files in the same module without explicit imports.
 
         if (!conditions.isEmpty) {
           b.appendSafe(" WHERE ");
-          b.appendFragment(conditions[0]);
+          b.appendFragment(conditions[0].condition);
           for (var i = 1; i < conditions.length; ++i) {
-            b.appendSafe(" AND ");
-            b.appendFragment(conditions[i]);
+            b.appendSafe(" ");
+            b.appendSafe(conditions[i].keyword());
+            b.appendSafe(" ");
+            b.appendFragment(conditions[i].condition);
           }
         }
 
