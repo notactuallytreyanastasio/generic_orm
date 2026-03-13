@@ -295,6 +295,99 @@ This creates a fully automated cascade: **ORM source change** -> **build** -> **
 
 ---
 
+## SQL Security Analysis
+
+The entire point of this project is demonstrating type-safe SQL generation across 6 languages from a single source. Here's how the ORM prevents SQL injection and where the boundaries are.
+
+### Defense Layers
+
+**Layer 1: `SafeIdentifier` (CWE-89 — table/column names)**
+
+Table and column names must pass through [`safeIdentifier()`](src/schema.temper.md), which validates against `[a-zA-Z_][a-zA-Z0-9_]*`. The internal `ValidatedIdentifier` class is **not exported** — external code cannot construct one without validation. This is the only path to `appendSafe` at runtime, closing off identifier-based injection entirely.
+
+```
+safeIdentifier("users")       → ValidatedIdentifier ✓
+safeIdentifier("users; DROP") → bubble (rejected)
+safeIdentifier("table--name") → bubble (rejected)
+```
+
+**Layer 2: Typed `SqlPart` hierarchy (CWE-89 — value escaping)**
+
+User values never touch `appendSafe`. Each type gets its own [`SqlPart`](src/sql_model.temper.md) subclass with type-appropriate rendering:
+
+| Type | Rendering | Example |
+|------|-----------|---------|
+| `SqlString` | Quote-wraps with `'` escaping (`'` → `''`) | `'O''Brien'` |
+| `SqlInt32` / `SqlInt64` | Bare integer via `.toString()` | `42` |
+| `SqlBoolean` | Literal `TRUE` / `FALSE` | `TRUE` |
+| `SqlFloat64` | Bare float via `.toString()` | `3.14` |
+| `SqlDate` | Quote-wrapped date string | `'2026-03-12'` |
+
+The `SqlPart` interface is **sealed** — the compiler enforces exhaustive handling. Adding a new type without updating the rendering logic is a compile error.
+
+**Layer 3: `SqlBuilder` separation (CWE-89 — structural safety)**
+
+[`SqlBuilder`](src/sql_builder.temper.md) enforces a clean separation between SQL structure and data:
+- `appendSafe(str)` — for SQL keywords and validated identifiers only
+- `appendString(val)` → wraps in `SqlString` (escaped)
+- `appendInt32(val)` → wraps in `SqlInt32` (bare integer)
+
+There is no `appendRaw` or bypass method. The only way to get unescaped content into a query is through `appendSafe`, which is only ever called with hardcoded literals or `SafeIdentifier.sqlValue`.
+
+**Layer 4: Changeset pipeline (CWE-915 — mass assignment)**
+
+[`Changeset`](src/changeset.temper.md) is a **sealed interface** — `ChangesetImpl` is not exported, so construction only happens through the `changeset()` factory. The pipeline enforces:
+- `cast(allowedFields)` — field whitelisting via `List<SafeIdentifier>`, prevents mass assignment
+- `validateRequired(fields)` — non-nullable enforcement
+- `toInsertSql()` / `toUpdateSql(id)` — independently enforces non-nullable fields regardless of `isValid`
+- Raw `params` are never exposed — only whitelisted `changes` are readable
+- `valueToSqlPart` uses exhaustive type dispatch on the sealed `FieldType` union
+
+**Layer 5: Query builder (CWE-89, CWE-400)**
+
+[`Query`](src/query.temper.md) requires `SafeIdentifier` for table names, column selections, and ORDER BY clauses. WHERE conditions accept only `SqlFragment` (never raw strings). `safeToSql(defaultLimit)` enforces result set bounds (CWE-400).
+
+### ORM-Level Findings
+
+| # | Severity | CWE | Finding |
+|---|----------|-----|---------|
+| ORM-1 | MEDIUM | CWE-89 | `toInsertSql`/`toUpdateSql` pass `pair.key` (a `String`) to `appendSafe`. Safe by construction — keys originate from `cast()` which requires `SafeIdentifier` — but the type system doesn't enforce this at the call site. A refactor that introduces a new code path to `changes` could silently bypass validation. |
+| ORM-2 | LOW | CWE-89 | `SqlDate.formatTo` wraps `value.toString()` in quotes without escaping. If `Date.toString()` ever contains a single quote, this produces malformed SQL. Currently safe because date format is `YYYY-MM-DD`. |
+| ORM-3 | LOW | CWE-20 | `SqlFloat64.formatTo` calls `value.toString()` which can produce `NaN` or `Infinity` — not valid SQL literals. SQLite silently accepts these as column names, so `SELECT NaN` returns a null rather than erroring. |
+| ORM-4 | INFO | CWE-89 | The ORM renders fully-formed SQL strings via escaping rather than parameterized queries (`?` placeholders). While the escaping is correct for SQLite, parameterized queries are the gold standard defense. The TODO in [`sql_builder.temper.md`](src/sql_builder.temper.md) acknowledges this. |
+
+### How Each App Uses the ORM vs Raw SQL
+
+Every app needs raw SQL for two things the ORM doesn't cover: DDL (`CREATE TABLE`) and JOINs with aggregates. All user-facing CRUD flows through the ORM.
+
+| Operation | JS | PY | RS | JV | LU | CS |
+|-----------|----|----|----|----|----|----|
+| SELECT (single table) | ORM `from()` | ORM `from_()` | ORM `from()` | ORM `from()` | ORM `from()` | ORM `From()` |
+| INSERT | ORM `changeset().toInsertSql()` | ORM `changeset().to_insert_sql()` | ORM `changeset().to_insert_sql()` | ORM `changeset().toInsertSql()` | ORM `changeset().toInsertSql()` | ORM `Changeset().ToInsertSql()` |
+| UPDATE | ORM `changeset().toUpdateSql()` | ORM `changeset().to_update_sql()` | ORM `changeset().to_update_sql()` | ORM `changeset().toUpdateSql()` | Raw `?` param | ORM `Changeset().ToUpdateSql()` |
+| DELETE | ORM `deleteSql()` | ORM `delete_sql()` | ORM `delete_sql()` | ORM `deleteSql()` | ORM `deleteSql()` | ORM `DeleteSql()` |
+| Toggle completed | Raw `?` param | Raw `?` param | ORM changeset | Raw `?` param | Raw `?` param | Raw via SqlBuilder |
+| JOIN + aggregate | Raw `?` param | Raw `?` param | Raw (hardcoded) | Raw `?` param | Raw (hardcoded) | ORM `From()` |
+| DDL | Raw (static) | Raw (static) | Raw (static) | Raw (static) | Raw (static) | Raw (static) |
+| WHERE clauses | ORM `SqlBuilder` | ORM `SqlBuilder` | ORM `SqlBuilder` | ORM `SqlBuilder` | ORM `SqlBuilder` | ORM `SqlBuilder` |
+
+**Raw SQL parameterization**: JS and Java achieve 100% parameterized raw SQL. Python and C# are near-100%. Rust and Lua have hardcoded JOIN queries (safe — no user input) and use `?` params elsewhere.
+
+### Per-App Detailed Reports
+
+Each app repo contains a `SECURITY_ANALYSIS.md` with SQL-specific findings:
+
+| App | Report |
+|-----|--------|
+| JavaScript | [`generic-orm-js-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-js-app/blob/main/SECURITY_ANALYSIS.md) |
+| Python | [`generic-orm-py-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-py-app/blob/main/SECURITY_ANALYSIS.md) |
+| Rust | [`generic-orm-rust-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-rust-app/blob/main/SECURITY_ANALYSIS.md) |
+| Java | [`generic-orm-java-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-java-app/blob/main/SECURITY_ANALYSIS.md) |
+| Lua | [`generic-orm-lua-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-lua-app/blob/main/SECURITY_ANALYSIS.md) |
+| C# | [`generic-orm-csharp-app/SECURITY_ANALYSIS.md`](https://github.com/notactuallytreyanastasio/generic-orm-csharp-app/blob/main/SECURITY_ANALYSIS.md) |
+
+---
+
 ## Building Locally
 
 ### Prerequisites
