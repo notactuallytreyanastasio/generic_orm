@@ -160,11 +160,67 @@ jobs:
           path: test-output.txt
           retention-days: 7
 
-      - name: Fail job if tests failed
+      - name: Open issue on failure
         if: steps.run-tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "::error::temper test -b ${{ matrix.lang }} failed — skipping publish"
-          echo "See uploaded test-output artifact for details"
+          LANG="${{ matrix.lang }}"
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          TEST_OUTPUT=$(tail -100 test-output.txt 2>/dev/null || echo "No test output captured")
+
+          # Check for existing open issue to avoid duplicates
+          EXISTING=$(gh issue list --state open \
+            --search "temper test ${LANG} backend failed" \
+            --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$(cat <<COMMENT_EOF
+          **Still failing** at commit [\`${SHORT_SHA}\`](${RUN_URL})
+
+          \`\`\`
+          ${TEST_OUTPUT}
+          \`\`\`
+          COMMENT_EOF
+          )"
+            echo "::error::temper test -b ${LANG} failed — commented on issue #${EXISTING}"
+            exit 1
+          fi
+
+          gh label create "bug" --color "d73a4a" 2>/dev/null || true
+          gh label create "ci" --color "0e8a16" 2>/dev/null || true
+
+          gh issue create \
+            --title "CI: temper test ${LANG} backend failed on ${SHORT_SHA}" \
+            --body "$(cat <<ISSUE_EOF
+          ## Build-Time Test Failure
+
+          \`temper test -b ${LANG}\` failed during CI.
+
+          **Commit:** [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${SHA})
+          **Workflow Run:** [View logs](${RUN_URL})
+          **Backend:** ${LANG}
+
+          ### Test Output (last 100 lines)
+          \`\`\`
+          ${TEST_OUTPUT}
+          \`\`\`
+
+          ### Reproduce Locally
+          \`\`\`bash
+          temper test -b ${LANG}
+          \`\`\`
+
+          ### Impact
+          The ${LANG} backend was **not published** and app repos were **not updated**.
+          Other backends that passed were published normally.
+          ISSUE_EOF
+          )" \
+            --label "bug,ci"
+
+          echo "::error::temper test -b ${LANG} failed — issue created, skipping publish"
           exit 1
 
   publish:
