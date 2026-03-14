@@ -481,3 +481,64 @@ This is not a security tool. It's not a scanner. It's not a review process. It's
 ### The One-Line Summary
 
 > **Alloy doesn't make SQL injection harder to write. It makes SQL injection impossible to represent.**
+
+---
+
+## Phase 5: Expanded Vulnerability Audit
+
+**Date:** 2026-03-13
+**Scope:** Full application — all 61 route files, 22 models, middleware, database layers
+
+### Why We Did This
+
+The original audit (Changes 0-2) was scoped to SQL injection. We searched for `sequelize.query()` calls with string interpolation, found 2, fixed them. But that only answers one question: "Are there SQL injection vulnerabilities?" It doesn't answer: "Is the application secure?"
+
+We expanded scope to cover the full OWASP Top 10 and found that SQL injection was the tip of the iceberg.
+
+### What We Found
+
+**17 total vulnerabilities** across 7 distinct classes:
+
+| # | File | Type | Severity | Alloy Scope? |
+|---|------|------|----------|-------------|
+| VULN-01 | `login.ts:36` | SQL Injection | Critical | **Yes — FIXED** |
+| VULN-02 | `search.ts:25` | SQL Injection | Critical | **Yes — FIXED** |
+| VULN-03 | `search.ts:49` | Schema Disclosure | Medium | Partial |
+| VULN-04 | `trackOrder.ts:18` | NoSQL `$where` Injection | Critical | No |
+| VULN-05 | `showProductReviews.ts:36` | NoSQL `$where` Injection + DoS | Critical | No |
+| VULN-06 | `updateProductReviews.ts:18` | NoSQL Operator Injection | Critical | No |
+| VULN-07 | `likeProductReviews.ts:25` | NoSQL Selector Injection | High | No |
+| VULN-08 | `b2bOrder.ts:23` | Remote Code Execution | Critical | No |
+| VULN-09 | `profileImageUrlUpload.ts:24` | SSRF | High | No |
+| VULN-10 | `dataErasure.ts:68` | SSTI + Local File Read | High | No |
+| VULN-11 | `fileUpload.ts:83` | XXE | High | No |
+| VULN-12 | `fileUpload.ts:117` | YAML Deserialization | Medium | No |
+| VULN-13 | `fileUpload.ts:42` | Zip Slip / Path Traversal | High | No |
+| VULN-14 | `insecurity.ts:23` | Hardcoded Private Key | Critical | No |
+| VULN-15 | `insecurity.ts:43` | MD5 Password Hashing | High | No |
+| VULN-16 | `insecurity.ts:138` | Open Redirect | Medium | No |
+| VULN-17 | `changePassword.ts:14` | Sensitive Data in URL | Medium | No |
+| VULN-18 | `server.ts:480` | Mass Assignment | High | No |
+
+### The Key Insight
+
+The 4 NoSQL injection vulnerabilities (VULN-04 through VULN-07) are structurally identical to the SQL injection Alloy fixed. They use the same anti-pattern — string interpolation of user input into database queries — in a different database layer. A Temper-based NoSQL query builder would eliminate them with the same structural guarantees.
+
+The remaining 9 vulnerabilities are outside any query builder's scope. They require different defense categories: input validation, configuration hardening, access control, and cryptographic best practices.
+
+**Full details:** See [`juice-shop-security-audit.md`](juice-shop-security-audit.md) for complete analysis with code excerpts, attack vectors, CWE mappings, and proof-of-concept payloads for each vulnerability.
+
+### Updated Scorecard
+
+```
+                          Before Alloy    After Alloy    After Full Audit
+                          ────────────    ───────────    ────────────────
+SQL injection vectors:           2              0         0 (confirmed)
+NoSQL injection vectors:      (not audited)  (not audited)    4
+Other vuln classes:           (not audited)  (not audited)    9
+Total vulnerabilities:           2+             0+           17
+CWEs exploitable:               11              1            24 (full scope)
+CWEs mitigated by Alloy:         0             10            10 (unchanged)
+```
+
+**Alloy's score:** 10 CWEs mitigated, 0 regressions, 100% SQL injection coverage. The tool does exactly what it claims — no more, no less.
