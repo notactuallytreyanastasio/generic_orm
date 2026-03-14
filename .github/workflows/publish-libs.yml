@@ -129,7 +129,7 @@ jobs:
         with:
           dotnet-version: '8.0'
 
-      - name: Run tests
+      - name: Run temper tests
         id: run-tests
         run: |
           export PATH="/tmp/temper/bin:$PATH"
@@ -160,64 +160,11 @@ jobs:
           path: test-output.txt
           retention-days: 7
 
-      - name: Create issue on failure
-        if: steps.run-tests.outcome == 'failure'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          SHA="${{ github.sha }}"
-          SHORT_SHA="${SHA:0:7}"
-          LANG="${{ matrix.lang }}"
-          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${SHA}"
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          TEST_OUTPUT=$(head -200 test-output.txt)
-
-          # Check for existing open issue for this backend
-          EXISTING=$(gh issue list --state open --search "CI: ${LANG} backend tests failed" --json number --jq '.[0].number' 2>/dev/null || echo "")
-          if [ -n "$EXISTING" ]; then
-            echo "Updating existing issue #${EXISTING}"
-            gh issue comment "$EXISTING" --body "$(cat <<COMMENT_EOF
-          **Still failing** on ${SHORT_SHA} ([commit](${COMMIT_URL})) | [workflow run](${RUN_URL})
-
-          \`\`\`
-          $(tail -20 test-output.txt)
-          \`\`\`
-          COMMENT_EOF
-          )"
-            exit 0
-          fi
-
-          # Ensure labels exist
-          gh label create "bug" --color "d73a4a" --description "Something isn't working" 2>/dev/null || true
-          gh label create "ci" --color "0e8a16" --description "CI/CD related" 2>/dev/null || true
-
-          cat > /tmp/issue-body.md <<EOF
-          ## Backend Test Failure
-
-          **Backend:** \`${LANG}\`
-          **Commit:** ${SHORT_SHA} ([view](${COMMIT_URL}))
-          **Workflow Run:** [View logs](${RUN_URL})
-
-          ### Test Output
-          \`\`\`
-          ${TEST_OUTPUT}
-          \`\`\`
-
-          ### Reproduce Locally
-          \`\`\`bash
-          temper test -b ${LANG}
-          \`\`\`
-          EOF
-
-          gh issue create \
-            --title "CI: ${LANG} backend tests failed on ${SHORT_SHA}" \
-            --body-file /tmp/issue-body.md \
-            --label "bug,ci"
-
       - name: Fail job if tests failed
         if: steps.run-tests.outcome == 'failure'
         run: |
-          echo "::error::Tests failed for ${{ matrix.lang }} backend"
+          echo "::error::temper test -b ${{ matrix.lang }} failed — skipping publish"
+          echo "See uploaded test-output artifact for details"
           exit 1
 
   publish:
@@ -339,6 +286,7 @@ jobs:
           cp templates/notify-app-template.yml target-repo/.github/workflows/notify-app.yml
           sed -i "s|__APP_REPO__|${{ matrix.app_repo }}|g" target-repo/.github/workflows/notify-app.yml
           sed -i "s|__VENDOR_PATH__|${{ matrix.vendor_path }}|g" target-repo/.github/workflows/notify-app.yml
+          sed -i "s|__LANG__|${{ matrix.lang }}|g" target-repo/.github/workflows/notify-app.yml
 
       - name: Commit and push
         if: steps.gate.outputs.skip != 'true'
