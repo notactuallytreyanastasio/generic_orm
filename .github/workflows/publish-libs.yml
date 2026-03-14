@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,16 +33,6 @@ jobs:
           export PATH="/tmp/temper/cli/build/install/temper/bin:$PATH"
           temper build
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Run tests (JS)
-        run: |
-          export PATH="/tmp/temper/cli/build/install/temper/bin:$PATH"
-          temper test -b js
-
       - name: Upload temper.out artifact
         uses: actions/upload-artifact@v4
         with:
@@ -53,8 +47,182 @@ jobs:
           path: .github/notify-app-template.yml
           retention-days: 1
 
-  publish:
+      - name: Upload Temper compiler
+        uses: actions/upload-artifact@v4
+        with:
+          name: temper-compiler
+          path: /tmp/temper/cli/build/install/temper/
+          retention-days: 1
+
+      - name: Upload ORM source
+        uses: actions/upload-artifact@v4
+        with:
+          name: orm-source
+          path: |
+            src/
+            config.temper.md
+            temper.keep/
+            secure-composition/
+          retention-days: 1
+
+  test:
     needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lang: js
+          - lang: py
+          - lang: rust
+          - lang: java
+          - lang: lua
+          - lang: csharp
+    steps:
+      - name: Checkout (for issue creation context)
+        uses: actions/checkout@v4
+
+      - name: Download Temper compiler
+        uses: actions/download-artifact@v4
+        with:
+          name: temper-compiler
+          path: /tmp/temper/
+
+      - name: Download ORM source
+        uses: actions/download-artifact@v4
+        with:
+          name: orm-source
+          path: .
+
+      - name: Make Temper executable
+        run: chmod +x /tmp/temper/bin/temper
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Node.js
+        if: matrix.lang == 'js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Python
+        if: matrix.lang == 'py'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Java (backend)
+        if: matrix.lang == 'java'
+        run: echo "JDK 21 already set up for Temper runtime"
+
+      - name: Setup Lua
+        if: matrix.lang == 'lua'
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
+
+      - name: Setup .NET
+        if: matrix.lang == 'csharp'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Run tests
+        id: run-tests
+        run: |
+          export PATH="/tmp/temper/bin:$PATH"
+          temper test -b ${{ matrix.lang }} 2>&1 | tee test-output.txt
+        continue-on-error: true
+
+      - name: Record test result
+        run: |
+          mkdir -p test-result
+          if [ "${{ steps.run-tests.outcome }}" = "success" ]; then
+            echo "success" > test-result/status.txt
+          else
+            echo "failure" > test-result/status.txt
+          fi
+
+      - name: Upload test result
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-result-${{ matrix.lang }}
+          path: test-result/
+          retention-days: 1
+
+      - name: Upload test output on failure
+        if: steps.run-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ matrix.lang }}
+          path: test-output.txt
+          retention-days: 7
+
+      - name: Create issue on failure
+        if: steps.run-tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          LANG="${{ matrix.lang }}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${SHA}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          TEST_OUTPUT=$(head -200 test-output.txt)
+
+          # Check for existing open issue for this backend
+          EXISTING=$(gh issue list --state open --search "CI: ${LANG} backend tests failed" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "Updating existing issue #${EXISTING}"
+            gh issue comment "$EXISTING" --body "$(cat <<COMMENT_EOF
+          **Still failing** on ${SHORT_SHA} ([commit](${COMMIT_URL})) | [workflow run](${RUN_URL})
+
+          \`\`\`
+          $(tail -20 test-output.txt)
+          \`\`\`
+          COMMENT_EOF
+          )"
+            exit 0
+          fi
+
+          # Ensure labels exist
+          gh label create "bug" --color "d73a4a" --description "Something isn't working" 2>/dev/null || true
+          gh label create "ci" --color "0e8a16" --description "CI/CD related" 2>/dev/null || true
+
+          cat > /tmp/issue-body.md <<EOF
+          ## Backend Test Failure
+
+          **Backend:** \`${LANG}\`
+          **Commit:** ${SHORT_SHA} ([view](${COMMIT_URL}))
+          **Workflow Run:** [View logs](${RUN_URL})
+
+          ### Test Output
+          \`\`\`
+          ${TEST_OUTPUT}
+          \`\`\`
+
+          ### Reproduce Locally
+          \`\`\`bash
+          temper test -b ${LANG}
+          \`\`\`
+          EOF
+
+          gh issue create \
+            --title "CI: ${LANG} backend tests failed on ${SHORT_SHA}" \
+            --body-file /tmp/issue-body.md \
+            --label "bug,ci"
+
+      - name: Fail job if tests failed
+        if: steps.run-tests.outcome == 'failure'
+        run: |
+          echo "::error::Tests failed for ${{ matrix.lang }} backend"
+          exit 1
+
+  publish:
+    needs: [build, test]
+    if: always() && !cancelled()
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -98,19 +266,38 @@ jobs:
             full_tree: true
 
     steps:
+      - name: Download test result
+        uses: actions/download-artifact@v4
+        with:
+          name: test-result-${{ matrix.lang }}
+          path: test-result-${{ matrix.lang }}/
+        continue-on-error: true
+
+      - name: Check test result
+        id: gate
+        run: |
+          status=$(cat test-result-${{ matrix.lang }}/status.txt 2>/dev/null || echo "failure")
+          if [ "$status" != "success" ]; then
+            echo "Tests failed for ${{ matrix.lang }} backend — skipping publish"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download temper.out artifact
+        if: steps.gate.outputs.skip != 'true'
         uses: actions/download-artifact@v4
         with:
           name: temper-out
           path: temper.out/
 
       - name: Download notify-app template
+        if: steps.gate.outputs.skip != 'true'
         uses: actions/download-artifact@v4
         with:
           name: notify-app-template
           path: templates/
 
       - name: Set up SSH
+        if: steps.gate.outputs.skip != 'true'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets[format('DEPLOY_KEY_{0}', matrix.lang_upper)] }}" > ~/.ssh/deploy_key
@@ -119,6 +306,7 @@ jobs:
           git config --global core.sshCommand "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
 
       - name: Clone target lib repo
+        if: steps.gate.outputs.skip != 'true'
         run: |
           git clone git@github.com:notactuallytreyanastasio/${{ matrix.repo }}.git target-repo
           cd target-repo
@@ -126,6 +314,7 @@ jobs:
           git config user.name "github-actions[bot]"
 
       - name: Sync compiled output
+        if: steps.gate.outputs.skip != 'true'
         run: |
           cd target-repo
 
@@ -144,6 +333,7 @@ jobs:
           echo "${{ github.sha }}" > VERSION
 
       - name: Write notify-app workflow
+        if: steps.gate.outputs.skip != 'true'
         run: |
           mkdir -p target-repo/.github/workflows
           cp templates/notify-app-template.yml target-repo/.github/workflows/notify-app.yml
@@ -151,6 +341,7 @@ jobs:
           sed -i "s|__VENDOR_PATH__|${{ matrix.vendor_path }}|g" target-repo/.github/workflows/notify-app.yml
 
       - name: Commit and push
+        if: steps.gate.outputs.skip != 'true'
         run: |
           cd target-repo
           git add -A
